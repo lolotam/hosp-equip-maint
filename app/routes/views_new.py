@@ -11,13 +11,14 @@ import os
 import platform
 import ctypes
 from datetime import datetime
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, g
 from flask import send_file
 import tempfile
 import pandas as pd
 from werkzeug.utils import secure_filename
 from app.services.data_service import DataService
 from app.services.validation import ValidationService
+from functools import wraps
 
 views_bp = Blueprint('views', __name__)
 logger = logging.getLogger(__name__)
@@ -27,6 +28,34 @@ ALLOWED_EXTENSIONS = {'csv'}
 
 # Export this function for use in other modules
 __all__ = ['views_bp', 'get_combined_machine_list']
+
+# Hardcoded users and roles
+USERS = {
+    'admin': {'password': 'admin123', 'role': 'ADMIN'},
+    'nurse': {'password': 'Nurse123', 'role': 'DATAENTRY'},
+    'gust': {'password': 'gust123', 'role': 'VIEWER'},
+}
+
+def login_required(view_func):
+    @wraps(view_func)
+    def wrapped_view(*args, **kwargs):
+        if 'user' not in session:
+            return redirect(url_for('views.login'))
+        g.user = session['user']
+        g.role = session['role']
+        return view_func(*args, **kwargs)
+    return wrapped_view
+
+def role_required(*roles):
+    def decorator(view_func):
+        @wraps(view_func)
+        def wrapped_view(*args, **kwargs):
+            if 'role' not in session or session['role'] not in roles:
+                flash('You do not have permission to access this page.', 'danger')
+                return redirect(url_for('views.index'))
+            return view_func(*args, **kwargs)
+        return wrapped_view
+    return decorator
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -128,6 +157,7 @@ def get_combined_machine_list():
     return combined_data
 
 @views_bp.route('/')
+@login_required
 def index():
     """Display the dashboard with maintenance statistics."""
     from datetime import datetime
@@ -173,6 +203,7 @@ def index():
                          equipment=combined_data)
 
 @views_bp.route('/equipment/<data_type>/list')
+@login_required
 def list_equipment(data_type):
     """Display list of equipment (either PPM or OCM)."""
     if data_type not in ('ppm', 'ocm'):
@@ -188,6 +219,7 @@ def list_equipment(data_type):
         return render_template('equipment/list.html', equipment=[], data_type=data_type)
 
 @views_bp.route('/equipment/ppm/edit/<mfg_serial>', methods=['GET', 'POST'])
+@login_required
 def edit_ppm_equipment(mfg_serial):
     """Handle editing existing PPM equipment."""
     # Get department options
@@ -265,6 +297,7 @@ def edit_ppm_equipment(mfg_serial):
                           form_data=form_data, departments=departments, mfg_serial=mfg_serial)
 
 @views_bp.route('/equipment/ocm/edit/<mfg_serial>', methods=['GET', 'POST'])
+@login_required
 def edit_ocm_equipment(mfg_serial):
     """Handle editing existing OCM equipment."""
     # Get department options
@@ -373,6 +406,7 @@ def edit_ocm_equipment(mfg_serial):
                           form_data=form_data, departments=departments, mfg_serial=mfg_serial)
 
 @views_bp.route('/equipment/ppm/add', methods=['GET', 'POST'])
+@login_required
 def add_ppm_equipment():
     """Handle adding new PPM equipment."""
     # Get department options
@@ -402,6 +436,7 @@ def add_ppm_equipment():
     return render_template('equipment/add.html', data_type='ppm', errors={}, form_data={}, departments=departments)
 
 @views_bp.route('/equipment/ocm/add', methods=['GET', 'POST'])
+@login_required
 def add_ocm_equipment():
     """Handle adding new OCM equipment."""
     # Get department options
@@ -466,6 +501,7 @@ def add_ocm_equipment():
     return render_template('equipment/add.html', data_type='ocm', errors={}, form_data={}, departments=departments)
 
 @views_bp.route('/training/import', methods=['POST'])
+@login_required
 def import_training():
     """Import training data from a CSV file."""
     if 'file' not in request.files:
@@ -667,6 +703,7 @@ def import_training():
         return redirect(url_for('views.import_export_page', section='training'))
 
 @views_bp.route('/training/list')
+@login_required
 def list_training():
     """Display the list of employee training records."""
     try:
@@ -679,12 +716,14 @@ def list_training():
         return render_template('training/list.html', employees=[], departments=[])
 
 @views_bp.route('/import-export')
+@login_required
 def import_export_page():
     """Display the unified import/export page with tabs for machines and training."""
     section = request.args.get('section', 'maintenance')
     return render_template('import_export/unified.html', section=section)
 
 @views_bp.route('/template/ppm')
+@login_required
 def download_ppm_template():
     """Generate and download a PPM template CSV file."""
     try:
@@ -733,6 +772,7 @@ def download_ppm_template():
         return redirect(url_for('views.list_equipment', data_type='ppm'))
 
 @views_bp.route('/template/ocm')
+@login_required
 def download_ocm_template():
     """Generate and download an OCM template CSV file."""
     try:
@@ -781,6 +821,7 @@ def download_ocm_template():
         return redirect(url_for('views.list_equipment', data_type='ocm'))
 
 @views_bp.route('/training/edit/<employee_id>', methods=['GET', 'POST'])
+@login_required
 def edit_training(employee_id):
     """Handle editing an existing employee training record."""
     # Get department options
@@ -889,6 +930,7 @@ def edit_training(employee_id):
     return render_template('training/edit.html', errors={}, form_data=existing_entry, departments=departments, employee_id=employee_id)
 
 @views_bp.route('/equipment/<data_type>/delete/<mfg_serial>', methods=['POST'])
+@login_required
 def delete_equipment(data_type, mfg_serial):
     """Delete equipment (either PPM or OCM)."""
     if data_type not in ('ppm', 'ocm'):
@@ -907,6 +949,7 @@ def delete_equipment(data_type, mfg_serial):
     return redirect(url_for('views.list_equipment', data_type=data_type))
 
 @views_bp.route('/training/delete/<employee_id>', methods=['POST'])
+@login_required
 def delete_training(employee_id):
     """Delete an employee training record."""
     try:
@@ -921,6 +964,7 @@ def delete_training(employee_id):
     return redirect(url_for('views.list_training'))
 
 @views_bp.route('/training/add', methods=['GET', 'POST'])
+@login_required
 def add_training():
     """Handle adding new employee training record."""
     # Get department options
@@ -1023,6 +1067,7 @@ def add_training():
     return render_template('training/add.html', errors={}, form_data={}, departments=departments)
 
 @views_bp.route('/template/training')
+@login_required
 def download_training_template():
     """Generate and download a training template CSV file with the new format."""
     try:
@@ -1099,6 +1144,7 @@ def download_training_template():
         return redirect(url_for('views.list_training'))
 
 @views_bp.route('/export/<data_type>')
+@login_required
 def export_equipment(data_type):
     """
     Export equipment data to CSV for download.
@@ -1133,6 +1179,7 @@ def export_equipment(data_type):
         return redirect(url_for('views.import_export_page', section='machines'))
 
 @views_bp.route('/import/equipment', methods=['POST'])
+@login_required
 def import_equipment():
     """Import equipment data from CSV file."""
     try:
@@ -1222,11 +1269,13 @@ def import_equipment():
         return redirect(url_for('views.import_export_page', section='machines'))
 
 @views_bp.route('/settings')
+@login_required
 def settings():
     """Display the settings page."""
     return render_template('settings/index.html')
 
 @views_bp.route('/send-test-notification')
+@login_required
 def send_test_notification():
     """Send a test notification email."""
     import asyncio
@@ -1279,6 +1328,7 @@ def send_test_notification():
             return redirect(url_for('views.index'))
 
 @views_bp.route('/export/training')
+@login_required
 def export_training():
     """Export training data to CSV for download."""
     try:
@@ -1302,3 +1352,24 @@ def export_training():
         logger.exception(f"Error exporting training data: {str(e)}")
         flash(f"An error occurred during export: {str(e)}", 'danger')
         return redirect(url_for('views.import_export_page', section='training'))
+
+@views_bp.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip().lower()
+        password = request.form.get('password', '')
+        user = USERS.get(username)
+        if user and user['password'] == password:
+            session['user'] = username
+            session['role'] = user['role']
+            flash(f'Welcome, {username}!', 'success')
+            return redirect(url_for('views.index'))
+        else:
+            flash('Invalid username or password.', 'danger')
+    return render_template('login.html')
+
+@views_bp.route('/logout')
+def logout():
+    session.clear()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('views.login'))

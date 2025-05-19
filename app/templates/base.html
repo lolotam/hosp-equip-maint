@@ -71,6 +71,22 @@
                         </a>
                     </li>
                 </ul>
+                <ul class="navbar-nav ms-auto">
+                    {% if session.user %}
+                        <li class="nav-item">
+                            <span class="navbar-text text-white me-3">
+                                <i class="fas fa-user-circle"></i> {{ session.user|capitalize }} ({{ session.role }})
+                            </span>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-danger" href="{{ url_for('views.logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link text-success" href="{{ url_for('views.login') }}"><i class="fas fa-sign-in-alt"></i> Login</a>
+                        </li>
+                    {% endif %}
+                </ul>
             </div>
         </div>
     </nav>
