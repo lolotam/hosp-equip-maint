@@ -1,0 +1,33 @@
+<div class="row mb-3">
+    <div class="col-md-6">
+        <label for="Last_Date" class="form-label">Last Date (Next Date will be auto-calculated)</label>
+        <input type="text" class="form-control {% if errors.Last_Date %}is-invalid{% endif %}" id="Last_Date" name="Last_Date" value="{{ form_data.Last_Date or '' }}" pattern="\d{2}/\d{2}/\d{4}" placeholder="DD/MM/YYYY" required>
+        {% if errors.Last_Date %}
+        <div class="invalid-feedback">
+            {% for error in errors.Last_Date %}
+                {{ error }}<br>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    <div class="col-md-6">
+        <label for="ENGINEER" class="form-label">Engineer</label>
+        <input type="text" class="form-control {% if errors.ENGINEER %}is-invalid{% endif %}" id="ENGINEER" name="ENGINEER" value="{{ form_data.ENGINEER or '' }}" required>
+        {% if errors.ENGINEER %}
+        <div class="invalid-feedback">
+            {% for error in errors.ENGINEER %}
+                {{ error }}<br>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% if form_data.Next_Date %}
+<div class="row mb-3">
+    <div class="col-md-6">
+        <label for="Next_Date" class="form-label">Next Date (Auto-calculated)</label>
+        <input type="text" class="form-control" id="Next_Date" name="Next_Date" value="{{ form_data.Next_Date }}" readonly>
+        <small class="text-muted">This field is automatically calculated as 1 year after Last Date</small>
+    </div>
+</div>
+{% endif %}

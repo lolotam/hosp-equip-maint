@@ -1,0 +1,144 @@
+Overall Goal: Enhance the existing system with bulk actions, PPM form simplification, improved data display, filtering, sorting, searching, bulk import enhancements, and a redesigned home page.
+
+Feature Breakdown
+
+1. Bulk Delete Functionality (PPM and OCM Pages)
+
+Goal: Allow users to select multiple records and delete them simultaneously instead of deleting them one by one.
+Implementation Steps:
+Frontend (HTML/JavaScript):
+Add checkboxes next to each row in the PPM and OCM tables on the list view.
+Add a "Bulk Delete" button (or similar UI element) above or below the table.
+When checkboxes are selected, store the MFG_SERIAL values of the selected rows in a JavaScript array.
+On clicking "Bulk Delete," display a confirmation modal ("Are you sure you want to delete X selected records?").
+If confirmed, send an AJAX (fetch or XMLHttpRequest) POST request to a new backend endpoint (/api/bulk_delete/ppm or /api/bulk_delete/ocm).
+The request body should contain the array of MFG_SERIAL values.
+Upon successful deletion, refresh the table or update it dynamically to reflect the changes.
+Backend (Python/Flask):
+Create new routes: /api/bulk_delete/ppm and /api/bulk_delete/ocm (or similar).
+These should accept POST requests with a JSON payload containing an array of MFG_SERIAL strings.
+In the endpoint handler:
+Validate the incoming data.
+Iterate through the MFG_SERIAL values.
+For each MFG_SERIAL, call the existing DataService.delete_entry method from app/services/data_service.py.
+Collect the results of each deletion (True/False)
+Return a JSON response indicating the overall success (e.g., {"success": true, "deleted_count": X, "not_found": Y}).
+Handle potential errors gracefully (e.g., invalid MFG_SERIAL, data inconsistencies).
+2. Remove OCM Field from PPM Form
+
+Goal: Eliminate the OCM field and its associated logic from the PPM entry process.
+Implementation Steps:
+Backend (Python/Flask):
+
+Modify the PPM entry model (app/models/ppm.py) to remove the OCM field if it exists.
+Remove the ENGINEER field if exists, as it was an OCM specific data.
+Update any Pydantic validation rules to remove checks for OCM.
+Update the app/services/data_service.py file:
+In DataService.get_entry and DataService.update_entry remove any code that depends on OCM field.
+Update app/services/import_export.py file:
+Change the required_fields variable in the section where data_type == 'ppm' to: required_fields = ['EQUIPMENT', 'MODEL', 'MFG_SERIAL', 'MANUFACTURER', 'LOG_NO', 'PPM'] instead of the current required_fields = ['EQUIPMENT', 'MODEL', 'MFG_SERIAL', 'MANUFACTURER', 'LOG_NO', 'PPM', 'OCM'].
+Change the OCM field to not be handled anymore in the import_ocm function. Remove everything related to it, so all code that handle it should be removed.
+Remove all the if statements in line 241 and all related to it, such as line 248, from the import_ocm function.
+Frontend (HTML/JavaScript):
+
+Remove the OCM field from the "Add PPM" form (app/templates/equipment/add.html).
+If there is any ENGINEER field in any form, remove it.
+Update any JavaScript code that interacts with the form to reflect the removal of the OCM field.
+Testing:
+
+Ensure that adding a PPM entry does not require the OCM field and that the data is correctly stored without it.
+3. Show All Columns in PPM Table
+
+Goal: Display all relevant PPM data fields in the main table on the PPM list view (app/templates/equipment/list.html).
+Implementation Steps:
+Frontend (HTML/Jinja):
+Modify the table structure in app/templates/equipment/list.html to include all desired columns.
+Ensure each column corresponds to a key in the PPM data entries (e.g., EQUIPMENT, MODEL, MFG_SERIAL, MANUFACTURER, LOG_NO, PPM, PPM_Q_1, PPM_Q_2, PPM_Q_3, PPM_Q_4, etc.).
+Add more columns to the current table.
+Verify the styling works correctly with all columns.
+Backend (Python/Flask):
+Ensure that the data sent to the template for rendering includes all the required fields.
+4. Filter, Sort, and Search in PPM Page
+
+Goal: Add filtering, sorting, and search capabilities to the PPM list view.
+Implementation Steps:
+Frontend (HTML/JavaScript):
+Search:
+Add a search input field (text box) above the table.
+Use JavaScript to capture the user's search query.
+On each keypress, or when a "Search" button is clicked, filter the table rows based on the query (search in EQUIPMENT, MODEL, MFG_SERIAL, etc.).
+Dynamically update the table to show only matching rows.
+Filter:
+Add filter dropdowns or checkboxes for relevant fields (e.g., MANUFACTURER, PPM, specific quarters).
+Use JavaScript to capture filter selections.
+When filters change, dynamically filter the table rows based on the selected values.
+Multiple filters should be applied simultaneously (AND logic).
+Sort:
+Make table headers clickable to enable sorting.
+On click, determine the column to sort by.
+Use JavaScript to sort the rows accordingly (ascending/descending).
+Consider using visual indicators (e.g., arrow icons) to show the current sort order.
+AJAX (Optional): For larger datasets, consider making AJAX requests to the backend to handle filtering, sorting, and searching there, and return the filtered/sorted data to the front end.
+Backend (Python/Flask) (Optional, for AJAX):
+Create a new API endpoint (e.g., /api/ppm_data) that can accept query parameters for:
+search: The search query string.
+filter: Filter values (e.g., manufacturer=XYZ, ppm=True).
+sort: The column to sort by and the sort direction (e.g., mfg_serial-asc).
+Implement the filtering, sorting, and searching logic in the endpoint handler.
+Return the filtered/sorted data as JSON.
+Combined:
+If using AJAX, make the frontend requests to this new endpoint.
+If not using AJAX, then use only Javascript for sorting, filtering and searching.
+5. Bulk Import Duplicate Handling
+
+Goal: If a duplicate MFG_SERIAL is found during bulk import, replace the entire existing entry instead of appending a duplicate.
+Implementation Steps:
+Backend (Python/Flask):
+In app/services/import_export.py (in the import_ocm function or in a new method import_ppm), modify the logic:
+Remove the loop in Line 260: and replace it with a condition, so when entering this logic, the existing_entry will be replaced with the entry data.
+Check if a MFG_SERIAL already exists in the current data set, if it does, update it with DataService.update_entry() method. This will replace the old key with the new key.
+Update the code to be able to work with both PPM and OCM bulk importing.
+Testing:
+Create a test case with a bulk import file that includes a duplicate MFG_SERIAL.
+Verify that the existing entry is completely replaced by the new entry, not duplicated.
+6. Auto-Generate Quarters in PPM Form
+
+Goal: Allow users to enter only the Q1 date and automatically calculate the remaining quarter dates, spaced three months apart.
+Implementation Steps:
+Frontend (HTML/JavaScript):
+In the "Add PPM" form (app/templates/equipment/add.html), include only one date field for Q1.
+Add hidden fields for Q2, Q3, and Q4 dates.
+When the user selects a Q1 date:
+Use JavaScript to calculate the other dates (Q2 = Q1 + 3 months, Q3 = Q2 + 3 months, Q4 = Q3 + 3 months).
+Set the values of the hidden fields accordingly.
+Validate the dates (optional).
+Backend (Python/Flask):
+When the form data is received, validate the dates (optional, but recommended).
+Store all four quarter dates in the data entry.
+Ensure that when bulk import is performed the logic of these auto generated dates is considered. So when the user import a bulk entry, only Q1 date should be provided.
+7. Redesigned Home Page
+
+Goal: Implement the new Home Page layout with reminder cards, total machines, and filters, sorts, and search.
+Implementation Steps:
+Frontend (HTML/Jinja/CSS):
+Create the new app/templates/index.html (or update the existing one).
+Implement the layout and styling as per the provided design.
+Create the layout cards (Overdue, Coming Up (7 days), Coming Up (14 days), etc.).
+Implement the filter, sort, and search input as described in section 4, but here they will filter for PPM and OCM in the whole site.
+Consider using a component-based approach for the cards and filters for better organization and reusability.
+Use dynamic data binding to show the correct machine counts and statuses.
+Update the html to show all required details in the card as per requirement.
+Backend (Python/Flask):
+Modify the / route handler (app/routes/views.py) to fetch the necessary data (total machines, overdue count, etc.).
+Calculate the date-based counts (7 days, 14 days, etc.).
+Send the data to the template for rendering.
+Consider using helper functions for data aggregation and date calculations.
+Create a new api that can be called from the main page using javascript for example to get filtered, sorted, searched data (if AJAX approach is used).
+General Notes
+
+Error Handling: Implement robust error handling throughout the backend code. Return proper HTTP status codes and error messages to the frontend.
+Validation: Validate all user inputs (form data, API requests).
+Code Style: Follow PEP 8 and the existing code style.
+Testing: Thoroughly test all new functionality and modifications. Add unit tests where applicable.
+Code comments: Add clear code comments throughout the project explaining the logic.
+Documentation: Update the project's README.md with relevant information about the new features and how to use them.

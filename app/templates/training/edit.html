@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Edit Employee Training
+{% endblock %}
+
+{% block styles %}
+    {{ super() }}
+    <style>
+        /* Machine item styling */
+        .machine-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 12px;
+            background-color: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .machine-header {
+            margin-bottom: 8px;
+        }
+
+        .machine-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .machine-name {
+            margin-left: 8px;
+            font-size: 1rem;
+        }
+
+        .trainer-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .trainer-label {
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+            color: #555;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h2>Edit Employee Training</h2>
+        <form method="post" action="{{ url_for('views.edit_training', employee_id=employee_id) }}">
+            <div class="mb-3">
+                <label for="name" class="form-label">Name</label>
+                <input type="text" class="form-control {% if errors.name or errors.NAME %}is-invalid{% endif %}" id="name" name="name" value="{{ form_data.name or form_data.NAME }}" required>
+                {% if errors.name or errors.NAME %}
+                    <div class="invalid-feedback">
+                        {% for error in errors.name or errors.NAME %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                <label for="id" class="form-label">ID</label>
+                <input type="number" class="form-control {% if errors.id or errors.ID %}is-invalid{% endif %}" id="id" name="id" value="{{ form_data.id or form_data.ID }}" readonly>
+                {% if errors.id or errors.ID %}
+                    <div class="invalid-feedback">
+                        {% for error in errors.id or errors.ID %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <small class="form-text text-muted">ID must be a number</small>
+            </div>
+            <div class="mb-3">
+                <label for="department" class="form-label">Department</label>
+                <select class="form-select searchable-select {% if errors.department or errors.DEPARTMENT %}is-invalid{% endif %}" id="department" name="department" data-placeholder="Search departments..." required>
+                    <option value="" {% if not form_data.department and not form_data.DEPARTMENT %}selected{% endif %}>Select Department</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept }}" {% if form_data.department == dept or form_data.DEPARTMENT == dept %}selected{% endif %}>{{ dept }}</option>
+                    {% endfor %}
+                </select>
+                {% if errors.department or errors.DEPARTMENT %}
+                    <div class="invalid-feedback">
+                        {% for error in errors.department or errors.DEPARTMENT %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <!-- Trainer field removed - now each machine has its own trainer -->
+
+            <div class="mb-3">
+                <label class="form-label">Machines</label>
+                <div class="card p-3">
+                    <div id="machines-container">
+                        <!-- Machine checkboxes will be dynamically inserted here -->
+                        <div class="alert alert-info">Please select a department to display machines.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="{{ url_for('views.list_training') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script src="{{ url_for('static', filename='js/department-machines.js') }}"></script>
+    <script>
+        // Initialize with the employee's existing machine data
+        document.addEventListener('DOMContentLoaded', function() {
+            // After the machine checklist is generated, check the boxes for machines the employee is trained on
+            const originalUpdateFunction = updateMachineChecklist;
+            updateMachineChecklist = function() {
+                originalUpdateFunction();
+
+                // Get the employee's machine data from the server
+                const employeeData = {{ form_data|tojson }};
+                const employeeMachines = employeeData.MACHINES || {};
+
+                // First check for machine1-7 fields
+                for (let i = 1; i <= 7; i++) {
+                    const machineKey = `machine${i}`;
+                    const trainerKey = `${machineKey}_trainer`;
+
+                    // Check if this machine is trained
+                    if (employeeData[machineKey]) {
+                        const checkbox = document.querySelector(`input[name="${machineKey}"]`);
+                        if (checkbox) {
+                            checkbox.checked = true;
+                        }
+
+                        // Set the trainer if available
+                        if (employeeData[trainerKey]) {
+                            const trainerSelect = document.querySelector(`select[name="${machineKey}_trainer"]`);
+                            if (trainerSelect) {
+                                trainerSelect.value = employeeData[trainerKey];
+                            }
+                        }
+                    }
+                }
+
+                // Also check the legacy MACHINES format for backward compatibility
+                for (const [machine, trained] of Object.entries(employeeMachines)) {
+                    // First check if it's one of the machine1-7 fields
+                    const machineNumber = parseInt(machine.replace('machine', ''));
+                    if (!isNaN(machineNumber) && machineNumber >= 1 && machineNumber <= 7) {
+                        const checkbox = document.querySelector(`input[name="machine${machineNumber}"]`);
+                        if (checkbox && trained) {
+                            checkbox.checked = true;
+                        }
+                    } else {
+                        // Otherwise check the legacy format
+                        const checkbox = document.querySelector(`input[name="MACHINES.${machine}"]`);
+                        if (checkbox && trained) {
+                            checkbox.checked = true;
+                        }
+                    }
+                }
+            };
+
+            // Trigger the update to initialize with the current department
+            updateMachineChecklist();
+        });
+    </script>
+{% endblock %}

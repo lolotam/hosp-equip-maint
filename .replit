@@ -1,0 +1,13 @@
+modules = ["python-3.11", "web", "bash"]
+run = "bash build_and_run.sh"
+
+[nix]
+channel = "stable-24_05"
+packages = ["glibcLocales", "libxcrypt"]
+
+[deployment]
+run = ["sh", "-c", "bash build_and_run.sh"]
+
+[[ports]]
+localPort = 5000
+externalPort = 80

@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {{ data_type.upper() }} Equipment List
+{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="section-title">{{ data_type.upper() }} Equipment List</h2>
+        <div>
+            <a href="{% if data_type == 'ppm' %}{{ url_for('views.add_ppm_equipment') }}{% elif data_type == 'ocm' %}{{ url_for('views.add_ocm_equipment') }}{% else %}#{% endif %}" class="btn btn-primary" data-bs-toggle="tooltip" title="Add new equipment">
+                <i class="fas fa-plus-circle me-1"></i> Add New {{ data_type.upper() }}
+            </a>
+            <a href="{{ url_for('views.import_export_page') }}" class="btn btn-secondary" data-bs-toggle="tooltip" title="Import or export data">
+                <i class="fas fa-file-import me-1"></i> Import/Export
+            </a>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Search and Filter</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search equipment...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-filter"></i></span>
+                        <select id="filterSelect" class="form-select">
+                            <option value="">Filter by Status</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">PPM: No</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-sort"></i></span>
+                        <select id="sortSelect" class="form-select">
+                            <option value="">Sort by...</option>
+                            <option value="EQUIPMENT">Equipment</option>
+                            <option value="MODEL">Model</option>
+                            <option value="MFG_SERIAL">Serial Number</option>
+                            <option value="MANUFACTURER">Manufacturer</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2 text-end">
+                    <a href="{{ url_for('views.download_ppm_template') if data_type == 'ppm' else url_for('views.download_ocm_template') }}" class="btn btn-info w-100" data-bs-toggle="tooltip" title="Download template file">
+                        <i class="fas fa-download me-1"></i> Template
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bulk-actions mb-3" style="display: none;">
+        <button id="bulkDeleteBtn" class="btn btn-danger">
+            <i class="fas fa-trash-alt me-1"></i> Delete Selected
+        </button>
+    </div>
+
+    {% if equipment %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover enhanced-table" id="equipment-table">
+                <thead>
+                    <tr>
+                        <th class="no-sort no-filter"><input type="checkbox" id="selectAll" class="form-check-input"></th>
+                        <th>Equipment</th>
+                        <th>Model</th>
+                        <th>MFG Serial</th>
+                        <th>Manufacturer</th>
+                        <th>Log No</th>
+                        <th class="dropdown-filter">Department</th>
+                        {% if data_type == 'ppm' %}
+                            <th>Q1 Date</th>
+                            <th>Q1 Engineer</th>
+                            <th>Q2 Date</th>
+                            <th>Q2 Engineer</th>
+                            <th>Q3 Date</th>
+                            <th>Q3 Engineer</th>
+                            <th>Q4 Date</th>
+                            <th>Q4 Engineer</th>
+                        {% else %}
+                            <th>Last Date</th>
+                            <th>Engineer</th>
+                            <th>Next Date</th>
+                        {% endif %}
+                        <th class="no-sort no-filter">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in equipment %}
+                        <tr>
+                            <td><input type="checkbox" class="item-checkbox form-check-input" data-serial="{{ entry.get('MFG_SERIAL') }}"></td>
+                            <td>{{ entry.get('EQUIPMENT', '') if entry.get('EQUIPMENT') != 'n/a' else '' }}</td>
+                            <td>{{ entry.get('MODEL', '') if entry.get('MODEL') != 'n/a' else '' }}</td>
+                            <td>{{ entry.get('MFG_SERIAL', '') }}</td>
+                            <td>{{ entry.get('MANUFACTURER', '') if entry.get('MANUFACTURER') != 'n/a' else '' }}</td>
+                            <td>{{ entry.get('LOG_NO', '') if entry.get('LOG_NO') != 'n/a' else '' }}</td>
+                            <td>{{ entry.get('DEPARTMENT', '') if entry.get('DEPARTMENT') != 'n/a' else '' }}</td>
+                            {% if data_type == 'ppm' %}
+                                <td>{{ entry.get('PPM_Q_I', {}).get('date', '') }}</td>
+                                <td>{{ entry.get('PPM_Q_I', {}).get('engineer', '') if entry.get('PPM_Q_I', {}).get('engineer') != 'n/a' else '' }}</td>
+                                <td>{{ entry.get('PPM_Q_II', {}).get('date', '') }}</td>
+                                <td>{{ entry.get('PPM_Q_II', {}).get('engineer', '') if entry.get('PPM_Q_II', {}).get('engineer') != 'n/a' else '' }}</td>
+                                <td>{{ entry.get('PPM_Q_III', {}).get('date', '') }}</td>
+                                <td>{{ entry.get('PPM_Q_III', {}).get('engineer', '') if entry.get('PPM_Q_III', {}).get('engineer') != 'n/a' else '' }}</td>
+                                <td>{{ entry.get('PPM_Q_IV', {}).get('date', '') }}</td>
+                                <td>{{ entry.get('PPM_Q_IV', {}).get('engineer', '') if entry.get('PPM_Q_IV', {}).get('engineer') != 'n/a' else '' }}</td>
+                            {% else %}
+                                <td>{{ entry.get('Last_Date', '') }}</td>
+                                <td>{{ entry.get('ENGINEER', '') if entry.get('ENGINEER') != 'n/a' else '' }}</td>
+                                <td>{{ entry.get('Next_Date', '') }}</td>
+                            {% endif %}
+                            <td>
+                                <div class="d-flex justify-content-center">
+                                    {# Edit Button #}
+                                    <a href="{% if data_type == 'ppm' %}{{ url_for('views.edit_ppm_equipment', mfg_serial=entry.get('MFG_SERIAL')) }}{% elif data_type == 'ocm' %}{{ url_for('views.edit_ocm_equipment', mfg_serial=entry.get('MFG_SERIAL')) }}{% else %}#{% endif %}"
+                                       class="btn btn-warning action-btn"
+                                       data-bs-toggle="tooltip" title="Edit equipment">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+
+                                    {# Delete Button Form #}
+                                    <form action="{{ url_for('views.delete_equipment', data_type=data_type, mfg_serial=entry.get('MFG_SERIAL')) }}" method="post" style="display: inline;">
+                                        <button type="submit" class="btn btn-danger action-btn"
+                                                onclick="return confirm('Are you sure you want to delete this item?');"
+                                                data-bs-toggle="tooltip" title="Delete equipment">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i> No {{ data_type.upper() }} equipment found.
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show bulk actions when items are selected
+        const checkboxes = document.querySelectorAll('.item-checkbox');
+        const bulkActions = document.querySelector('.bulk-actions');
+
+        function updateBulkActionsVisibility() {
+            const anyChecked = Array.from(checkboxes).some(checkbox => checkbox.checked);
+            bulkActions.style.display = anyChecked ? 'block' : 'none';
+        }
+
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateBulkActionsVisibility);
+        });
+
+        // Select all functionality
+        const selectAll = document.getElementById('selectAll');
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+                updateBulkActionsVisibility();
+            });
+        }
+    });
+</script>
+{% endblock %}

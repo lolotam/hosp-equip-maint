@@ -1,0 +1,8 @@
+flask>=2.3.3
+pydantic>=2.5.0
+pandas>=2.1.0
+schedule>=1.2.0
+python-dotenv>=1.0.0
+apscheduler>=3.10.4
+email-validator>=2.1.0
+flask-wtf>=1.2.1

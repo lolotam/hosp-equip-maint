@@ -1,0 +1,35 @@
+<div class="row mb-3">
+    <div class="col-md-6">
+        <label for="PPM_Q_I_date" class="form-label">Quarter I Date (Other quarters will be auto-generated)</label>
+        <input type="text" class="form-control {% if errors.get('PPM_Q_I') %}is-invalid{% endif %}" id="PPM_Q_I_date" name="PPM_Q_I_date" value="{{ form_data.get('PPM_Q_I_date', '') }}" pattern="\d{2}/\d{2}/\d{4}" placeholder="DD/MM/YYYY" required>
+        {% if errors.get('PPM_Q_I') %}
+        <div class="invalid-feedback">
+            {% for error in errors.get('PPM_Q_I') %}
+                {{ error }}<br>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    <div class="col-md-6">
+        <label for="PPM_Q_I_engineer">Quarter I Engineer</label>
+        <input type="text" class="form-control {% if errors.get('PPM_Q_I') %}is-invalid{% endif %}" id="PPM_Q_I_engineer" name="PPM_Q_I_engineer" value="{{ form_data.get('PPM_Q_I_engineer', '') }}" required>
+    </div>
+</div>
+<div class="row mb-3">
+    <div class="col-md-12">
+        <label for="PPM_Q_II_engineer">Quarter II Engineer</label>
+        <input type="text" class="form-control {% if errors.get('PPM_Q_II') %}is-invalid{% endif %}" id="PPM_Q_II_engineer" name="PPM_Q_II_engineer" value="{{ form_data.get('PPM_Q_II_engineer', '') }}" required>
+    </div>
+</div>
+<div class="row mb-3">
+    <div class="col-md-12">
+        <label for="PPM_Q_III_engineer">Quarter III Engineer</label>
+        <input type="text" class="form-control {% if errors.get('PPM_Q_III') %}is-invalid{% endif %}" id="PPM_Q_III_engineer" name="PPM_Q_III_engineer" value="{{ form_data.get('PPM_Q_III_engineer', '') }}" required>
+    </div>
+</div>
+<div class="row mb-3">
+    <div class="col-md-12">
+        <label for="PPM_Q_IV_engineer">Quarter IV Engineer</label>
+        <input type="text" class="form-control {% if errors.get('PPM_Q_IV') %}is-invalid{% endif %}" id="PPM_Q_IV_engineer" name="PPM_Q_IV_engineer" value="{{ form_data.get('PPM_Q_IV_engineer', '') }}" required>
+    </div>
+</div>

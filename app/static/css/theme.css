@@ -1,0 +1,207 @@
+/* Theme CSS */
+
+/* Light Theme (Default) */
+:root {
+    --bg-color: #ffffff;
+    --text-color: #212529;
+    --card-bg: #ffffff;
+    --card-border: #dee2e6;
+    --nav-bg: #343a40;
+    --nav-text: #ffffff;
+    --header-bg: #f8f9fa;
+    --footer-bg: #f8f9fa;
+    --hover-bg: #f8f9fa;
+    --primary-color: #007bff;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --table-stripe: rgba(0, 0, 0, 0.05);
+    --table-hover: rgba(0, 0, 0, 0.075);
+    --input-bg: #ffffff;
+    --input-border: #ced4da;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Dark Theme */
+body.dark-theme {
+    --bg-color: #121212;
+    --text-color: #e4e4e4;
+    --card-bg: #1e1e1e;
+    --card-border: #333333;
+    --nav-bg: #1a1a1a;
+    --nav-text: #ffffff;
+    --header-bg: #252525;
+    --footer-bg: #1a1a1a;
+    --hover-bg: #2c2c2c;
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --table-stripe: rgba(255, 255, 255, 0.05);
+    --table-hover: rgba(255, 255, 255, 0.075);
+    --input-bg: #2c2c2c;
+    --input-border: #444444;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Apply theme variables */
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Navbar */
+body.dark-theme .navbar {
+    background-color: var(--nav-bg) !important;
+}
+
+/* Content wrapper */
+body.dark-theme .content-wrapper {
+    background-color: var(--card-bg);
+    border: 1px solid var(--card-border);
+}
+
+/* Cards */
+body.dark-theme .card {
+    background-color: var(--card-bg);
+    border-color: var(--card-border);
+}
+
+body.dark-theme .card-header {
+    background-color: var(--header-bg);
+    border-color: var(--card-border);
+}
+
+/* Tables */
+body.dark-theme .table {
+    color: var(--text-color);
+}
+
+body.dark-theme .table-striped tbody tr:nth-of-type(odd) {
+    background-color: var(--table-stripe);
+}
+
+body.dark-theme .table-hover tbody tr:hover {
+    background-color: var(--table-hover);
+}
+
+/* Inputs */
+body.dark-theme .form-control {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--text-color);
+}
+
+body.dark-theme .form-control:focus {
+    background-color: var(--input-bg);
+    color: var(--text-color);
+}
+
+/* Buttons */
+body.dark-theme .btn-light {
+    background-color: var(--header-bg);
+    border-color: var(--card-border);
+    color: var(--text-color);
+}
+
+/* Modals */
+body.dark-theme .modal-content {
+    background-color: var(--card-bg);
+    border-color: var(--card-border);
+}
+
+body.dark-theme .modal-header,
+body.dark-theme .modal-footer {
+    background-color: var(--header-bg);
+    border-color: var(--card-border);
+}
+
+/* Footer */
+body.dark-theme footer {
+    background-color: var(--footer-bg) !important;
+    border-color: var(--card-border) !important;
+    color: var(--text-color);
+}
+
+/* Alerts */
+body.dark-theme .alert {
+    border-color: var(--card-border);
+}
+
+/* Dropdown menus */
+body.dark-theme .dropdown-menu {
+    background-color: var(--card-bg);
+    border-color: var(--card-border);
+}
+
+body.dark-theme .dropdown-item {
+    color: var(--text-color);
+}
+
+body.dark-theme .dropdown-item:hover {
+    background-color: var(--hover-bg);
+}
+
+/* List groups */
+body.dark-theme .list-group-item {
+    background-color: var(--card-bg);
+    border-color: var(--card-border);
+    color: var(--text-color);
+}
+
+/* Tabs */
+body.dark-theme .nav-tabs {
+    border-color: var(--card-border);
+}
+
+body.dark-theme .nav-tabs .nav-link.active {
+    background-color: var(--card-bg);
+    border-color: var(--card-border);
+    color: var(--text-color);
+}
+
+body.dark-theme .nav-tabs .nav-link:not(.active) {
+    color: var(--text-color);
+}
+
+/* Tooltips */
+body.dark-theme .tooltip-inner {
+    background-color: var(--nav-bg);
+}
+
+/* Pagination */
+body.dark-theme .page-link {
+    background-color: var(--card-bg);
+    border-color: var(--card-border);
+    color: var(--text-color);
+}
+
+body.dark-theme .page-item.active .page-link {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Badges */
+body.dark-theme .badge {
+    background-color: var(--secondary-color);
+}
+
+/* Progress bars */
+body.dark-theme .progress {
+    background-color: var(--header-bg);
+}
+
+/* Apply theme on page load */
+document.addEventListener('DOMContentLoaded', function() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-theme');
+    } else {
+        document.body.classList.remove('dark-theme');
+    }
+});

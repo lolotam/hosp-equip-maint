@@ -1,0 +1,316 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Employee Training List
+{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="section-title">Employee Training List</h2>
+        <div>
+            <a href="{{ url_for('views.add_training') }}" class="btn btn-primary" data-bs-toggle="tooltip" title="Add new employee training record">
+                <i class="fas fa-user-plus me-1"></i> Add New Employee
+            </a>
+            <a href="{{ url_for('views.import_export_page', section='training') }}" class="btn btn-secondary" data-bs-toggle="tooltip" title="Import or export training data">
+                <i class="fas fa-file-import me-1"></i> Import/Export
+            </a>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Search and Filter</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search employees...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-filter"></i></span>
+                        <select id="filterSelect" class="form-select">
+                            <option value="">Filter by Department</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept }}">{{ dept }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-sort"></i></span>
+                        <select id="sortSelect" class="form-select">
+                            <option value="">Sort by...</option>
+                            <option value="NAME">Name</option>
+                            <option value="ID">ID</option>
+                            <option value="DEPARTMENT">Department</option>
+                            <option value="TRAINER">Trainer</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2 text-end">
+                    <a href="{{ url_for('views.download_training_template') }}" class="btn btn-info w-100" data-bs-toggle="tooltip" title="Download template file">
+                        <i class="fas fa-download me-1"></i> Template
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bulk-actions mb-3" style="display: none;">
+        <button id="bulkDeleteBtn" class="btn btn-danger">
+            <i class="fas fa-trash-alt me-1"></i> Delete Selected
+        </button>
+        <span id="selectedCount" class="ms-2 text-muted"></span>
+    </div>
+
+    {% if employees %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover enhanced-table" id="training-table">
+                <thead>
+                    <tr>
+                        <th class="no-sort no-filter"><input type="checkbox" id="selectAll" class="form-check-input"></th>
+                        <th>Name</th>
+                        <th>ID</th>
+                        <th class="dropdown-filter">Department</th>
+                        <th>MACHINE 1</th>
+                        <th>MACHINE 1 Trainer</th>
+                        <th>MACHINE 2</th>
+                        <th>MACHINE 2 Trainer</th>
+                        <th>MACHINE 3</th>
+                        <th>MACHINE 3 Trainer</th>
+                        <th>MACHINE 4</th>
+                        <th>MACHINE 4 Trainer</th>
+                        <th>MACHINE 5</th>
+                        <th>MACHINE 5 Trainer</th>
+                        <th>MACHINE 6</th>
+                        <th>MACHINE 6 Trainer</th>
+                        <th>MACHINE 7</th>
+                        <th>MACHINE 7 Trainer</th>
+                        <th class="dropdown-filter">Total Trained</th>
+                        <th class="no-sort no-filter">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in employees %}
+                        <tr>
+                            <td><input type="checkbox" class="item-checkbox form-check-input" data-id="{{ employee.get('id', employee.ID) }}"></td>
+                            <td>{{ employee.get('NAME', '') }}</td>
+                            <td>{{ employee.get('ID', '') }}</td>
+                            <td>{{ employee.get('DEPARTMENT', '') }}</td>
+                            {% for i in range(1, 8) %}
+                                <td>
+                                    {% if employee['machine' ~ i] %}
+                                        <span class="text-success">&#10003;</span>
+                                    {% else %}
+                                        <span class="text-danger">&#10007;</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ employee['machine' ~ i ~ '_trainer'] or '' }}</td>
+                            {% endfor %}
+                            <td>{{ employee.get('total_trained', 0) }}</td>
+                            <td>
+                                <div class="d-flex justify-content-center">
+                                    <a href="{{ url_for('views.edit_training', employee_id=employee.ID) }}"
+                                       class="btn btn-warning action-btn"
+                                       data-bs-toggle="tooltip" title="Edit employee">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form action="{{ url_for('views.delete_training', employee_id=employee.ID) }}" method="post" style="display: inline;">
+                                        <button type="submit" class="btn btn-danger action-btn"
+                                                onclick="return confirm('Are you sure you want to delete this employee?');"
+                                                data-bs-toggle="tooltip" title="Delete employee">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i> No employee training records found.
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    /* Machine cell styling */
+    .machine-cell {
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    .machine-name {
+        font-size: 0.85rem;
+        font-weight: 500;
+        margin-bottom: 5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 120px;
+    }
+
+    .machine-status {
+        margin-top: 3px;
+        margin-bottom: 3px;
+    }
+
+    .trainer-name {
+        font-size: 0.75rem;
+        color: #666;
+        margin-top: 3px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .trainer-value {
+        font-weight: 500;
+        color: #495057;
+    }
+
+    .empty-machine {
+        color: #aaa;
+        font-style: italic;
+    }
+
+    .total-trained {
+        font-weight: bold;
+        text-align: center;
+    }
+
+    /* Row coloring based on training status */
+    .training-complete {
+        background-color: rgba(40, 167, 69, 0.1) !important;
+    }
+
+    .training-partial {
+        background-color: rgba(255, 193, 7, 0.1) !important;
+    }
+
+    .training-none {
+        background-color: rgba(220, 53, 69, 0.05) !important;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show bulk actions when items are selected
+        const checkboxes = document.querySelectorAll('.item-checkbox');
+        const bulkActions = document.querySelector('.bulk-actions');
+        const selectedCountSpan = document.getElementById('selectedCount');
+        const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+
+        function updateBulkActionsVisibility() {
+            const checkedBoxes = Array.from(checkboxes).filter(checkbox => checkbox.checked);
+            const anyChecked = checkedBoxes.length > 0;
+
+            bulkActions.style.display = anyChecked ? 'block' : 'none';
+
+            // Update the selected count
+            if (anyChecked) {
+                selectedCountSpan.textContent = `(${checkedBoxes.length} selected)`;
+            } else {
+                selectedCountSpan.textContent = '';
+            }
+        }
+
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateBulkActionsVisibility);
+        });
+
+        // Select all functionality
+        const selectAll = document.getElementById('selectAll');
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+                updateBulkActionsVisibility();
+            });
+        }
+
+        // Bulk delete functionality
+        if (bulkDeleteBtn) {
+            bulkDeleteBtn.addEventListener('click', function() {
+                // Get all selected employee IDs
+                const selectedIds = Array.from(checkboxes)
+                    .filter(checkbox => checkbox.checked)
+                    .map(checkbox => checkbox.dataset.id);
+
+                // Log the selected IDs for debugging
+                console.log('Selected employee IDs:', selectedIds);
+
+                if (selectedIds.length === 0) {
+                    alert('No employees selected');
+                    return;
+                }
+
+                // Confirm deletion
+                if (!confirm(`Are you sure you want to delete ${selectedIds.length} selected employee(s)?`)) {
+                    return;
+                }
+
+                // Send the delete request to the API
+                fetch('/api/bulk_delete_employees', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ ids: selectedIds })
+                })
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Bulk delete response:', data);
+
+                    if (data.success) {
+                        // Show detailed success message
+                        let message = `Successfully deleted ${data.deleted_count} employee(s).`;
+
+                        if (data.not_found > 0) {
+                            message += ` ${data.not_found} not found.`;
+
+                            if (data.not_found_ids && data.not_found_ids.length > 0) {
+                                message += `\nNot found IDs: ${data.not_found_ids.join(', ')}`;
+                            }
+                        }
+
+                        if (data.deleted_ids && data.deleted_ids.length > 0) {
+                            message += `\nDeleted IDs: ${data.deleted_ids.join(', ')}`;
+                        }
+
+                        alert(message);
+
+                        // Reload the page to reflect the changes
+                        window.location.reload();
+                    } else {
+                        // Show error message
+                        alert(`Error: ${data.message || 'Failed to delete employees'}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error during bulk delete:', error);
+                    alert('An error occurred during deletion. Please try again.');
+                });
+            });
+        }
+    });
+</script>
+<script src="{{ url_for('static', filename='js/training-table.js') }}"></script>
+{% endblock %}

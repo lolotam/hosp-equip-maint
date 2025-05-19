@@ -1,0 +1,221 @@
+/* Standardized Table Styling for All Sections */
+
+/* Table Layout */
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: #212529;
+    background-color: #fff;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Table Cells */
+.table td, .table th {
+    padding: 6px 10px;
+    font-size: 13px;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+    border-top: 1px solid #dee2e6;
+}
+
+/* Table Headers */
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    position: relative;
+}
+
+/* Striped Rows */
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Hover Effect */
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.075);
+}
+
+/* Row Numbering Column */
+.row-number-column {
+    width: 50px;
+    text-align: center;
+    background-color: #f8f9fa;
+}
+
+.row-number {
+    text-align: center;
+    font-weight: 500;
+    color: #6c757d;
+}
+
+/* Action Buttons */
+.action-btn {
+    padding: 0;
+    font-size: 12px;
+    width: 28px;
+    height: 28px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 2px;
+    border-radius: 4px;
+    box-sizing: border-box;
+    border: none;
+}
+
+.action-btn i {
+    font-size: 12px;
+}
+
+/* Fix for delete button form */
+form[style="display: inline;"] {
+    display: inline-block !important;
+    margin: 0;
+    padding: 0;
+    line-height: 0;
+}
+
+/* Ensure both buttons have the same dimensions */
+.btn-warning.action-btn,
+.btn-danger.action-btn {
+    width: 28px !important;
+    height: 28px !important;
+    padding: 0 !important;
+}
+
+.action-buttons-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Filter Row */
+.filter-row th {
+    padding: 4px;
+    background-color: #f8f9fa;
+}
+
+.filter-row input,
+.filter-row select {
+    width: 100%;
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    border-radius: 3px;
+    border: 1px solid #ced4da;
+}
+
+.filter-row input:focus,
+.filter-row select:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Sortable Headers */
+.sortable {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-right: 25px !important;
+    transition: background-color 0.2s ease;
+}
+
+.sortable:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.sortable i {
+    font-size: 0.8rem;
+    color: #aaa;
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.sortable i.fa-sort-up,
+.sortable i.fa-sort-down {
+    color: #007bff;
+}
+
+/* Responsive Table */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Table Toolbar */
+.table-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.table-toolbar .search-container {
+    flex-grow: 1;
+    max-width: 400px;
+}
+
+.table-toolbar .filter-controls {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+/* Clear Filters Button */
+.clear-filters-container {
+    text-align: right;
+    margin-bottom: 0.5rem;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .table-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .table-toolbar .search-container {
+        max-width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    .table-toolbar .filter-controls {
+        justify-content: space-between;
+    }
+
+    .action-btn,
+    .btn-warning.action-btn,
+    .btn-danger.action-btn {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 14px;
+        padding: 0 !important;
+    }
+}

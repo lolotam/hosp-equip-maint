@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Add {{ data_type.upper() }} Equipment</h2>
+    <form action="{{ url_for('views.add_ppm_equipment') if data_type == 'ppm' else url_for('views.add_ocm_equipment') }}" method="post">
+        <div class="mb-3">
+            <label for="EQUIPMENT" class="form-label">Equipment</label>
+            <input type="text" class="form-control" id="EQUIPMENT" name="EQUIPMENT" value="{{ form_data.EQUIPMENT or '' }}" required>
+            {% if errors.EQUIPMENT %}
+            <div class="text-danger">{{ errors.EQUIPMENT[0] }}</div>
+            {% endif %}
+        </div>
+        <div class="mb-3">
+            <label for="MODEL" class="form-label">Model</label>
+            <input type="text" class="form-control" id="MODEL" name="MODEL" value="{{ form_data.MODEL or '' }}" required>
+            {% if errors.MODEL %}
+            <div class="text-danger">{{ errors.MODEL[0] }}</div>
+            {% endif %}
+        </div>
+        <div class="mb-3">
+            <label for="MFG_SERIAL" class="form-label">MFG Serial</label>
+            <input type="text" class="form-control" id="MFG_SERIAL" name="MFG_SERIAL" value="{{ form_data.MFG_SERIAL or '' }}" required>
+            {% if errors.MFG_SERIAL %}
+            <div class="text-danger">{{ errors.MFG_SERIAL[0] }}</div>
+            {% endif %}
+        </div>
+        <div class="mb-3">
+            <label for="MANUFACTURER" class="form-label">Manufacturer</label>
+            <input type="text" class="form-control" id="MANUFACTURER" name="MANUFACTURER" value="{{ form_data.MANUFACTURER or '' }}" required>
+            {% if errors.MANUFACTURER %}
+            <div class="text-danger">{{ errors.MANUFACTURER[0] }}</div>
+            {% endif %}
+        </div>
+        <div class="mb-3">
+            <label for="LOG_NO" class="form-label">Log No</label>
+            <input type="text" class="form-control" id="LOG_NO" name="LOG_NO" value="{{ form_data.LOG_NO or '' }}" required>
+            {% if errors.LOG_NO %}
+            <div class="text-danger">{{ errors.LOG_NO[0] }}</div>
+            {% endif %}
+        </div>
+        <div class="mb-3">
+            <label for="DEPARTMENT" class="form-label">Department Name</label>
+            <select class="form-select searchable-select" id="DEPARTMENT" name="DEPARTMENT" data-placeholder="Search departments..." required>
+                <option value="" {% if not form_data.DEPARTMENT %}selected{% endif %}>Select Department</option>
+                {% for dept in departments %}
+                <option value="{{ dept }}" {% if form_data.DEPARTMENT == dept %}selected{% endif %}>{{ dept }}</option>
+                {% endfor %}
+            </select>
+            {% if errors.DEPARTMENT %}
+            <div class="text-danger">{{ errors.DEPARTMENT[0] }}</div>
+            {% endif %}
+        </div>
+        {% if data_type == 'ppm' %}
+        <div class="mb-3">
+            <label for="PPM" class="form-label">PPM</label>
+            <select class="form-select" id="PPM" name="PPM" required>
+                <option value="Yes" {% if form_data.PPM == 'Yes' %}selected{% endif %}>Yes</option>
+                <option value="No" {% if form_data.PPM == 'No' %}selected{% endif %}>No</option>
+            </select>
+            {% if errors.PPM %}
+            <div class="text-danger">{{ errors.PPM[0] }}</div>
+            {% endif %}
+        </div>
+        <div class="mb-3">
+            <label for="PPM_Q_I_date" class="form-label">PPM Quarter I Date</label>
+            <input type="text" class="form-control" id="PPM_Q_I_date" name="PPM_Q_I_date" value="{{ form_data['PPM_Q_I_date'] or '' }}" pattern="\d{2}/\d{2}/\d{4}" placeholder="DD/MM/YYYY" required>
+            {% if errors['PPM_Q_I_date'] %}
+            <div class="text-danger">{{ errors['PPM_Q_I_date'][0] }}</div>
+            {% endif %}
+        </div>
+        {% for q in ['I', 'II', 'III', 'IV'] %}
+        <div class="mb-3">
+            <label for="PPM_Q_{{ q }}_engineer" class="form-label">PPM Quarter {{ q }} Engineer</label>
+            <input type="text" class="form-control" id="PPM_Q_{{ q }}_engineer" name="PPM_Q_{{ q }}_engineer" value="{{ form_data['PPM_Q_' + q + '_engineer'] or '' }}" required>
+            {% if errors['PPM_Q_' + q + '_engineer'] %}
+            <div class="text-danger">{{ errors['PPM_Q_' + q + '_engineer'][0] }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="mb-3">
+            <label for="OCM" class="form-label">OCM</label>
+            <select class="form-select" id="OCM" name="OCM" required>
+                <option value="Yes" {% if form_data.OCM == 'Yes' %}selected{% endif %}>Yes</option>
+                <option value="No" {% if form_data.OCM == 'No' %}selected{% endif %}>No</option>
+            </select>
+            {% if errors.OCM %}
+            <div class="text-danger">{{ errors.OCM[0] }}</div>
+            {% endif %}
+        </div>
+        <div class="mb-3">
+            <label for="Last_Date" class="form-label">Last Date</label>
+            <input type="text" class="form-control" id="Last_Date" name="Last_Date" value="{{ form_data.Last_Date or '' }}" pattern="\d{2}/\d{2}/\d{4}" placeholder="DD/MM/YYYY" required>
+            <small class="text-muted">Next Date will be auto-calculated as 1 year after Last Date</small>
+            {% if errors.Last_Date %}
+            <div class="text-danger">{{ errors.Last_Date[0] }}</div>
+            {% endif %}
+        </div>
+        <div class="mb-3">
+            <label for="ENGINEER" class="form-label">Engineer</label>
+            <input type="text" class="form-control" id="ENGINEER" name="ENGINEER" value="{{ form_data.ENGINEER or '' }}" required>
+            {% if errors.ENGINEER %}
+            <div class="text-danger">{{ errors.ENGINEER[0] }}</div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <button type="submit" class="btn btn-primary">Add Equipment</button>
+    </form>
+</div>
+{% endblock %}

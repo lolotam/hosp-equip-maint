@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Equipment Maintenance</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Enhanced CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/enhanced.css') }}">
+    <!-- Theme CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+    <!-- Standardized Tables CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/standardized-tables.css') }}">
+    <!-- Custom CSS -->
+    <style>
+        body {
+            padding-top: 70px; /* Adjust for fixed navbar height */
+        }
+        footer {
+            background-color: #f8f9fa;
+            padding: 20px 0;
+            margin-top: 40px;
+        }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top shadow">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold fs-4" href="{{ url_for('views.index') }}">
+                <i class="fas fa-tools me-2"></i>AL ORF MAINTENANCE
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav w-100 justify-content-evenly">
+                    <li class="nav-item mx-2">
+                        <a class="nav-link nav-pill fs-5 fw-semibold px-4" href="{{ url_for('views.index') }}" data-bs-toggle="tooltip" data-bs-placement="bottom" title="View Dashboard">
+                            <i class="fas fa-chart-line me-2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item mx-2">
+                        <a class="nav-link nav-pill fs-5 fw-semibold px-4" href="{{ url_for('views.list_equipment', data_type='ppm') }}" data-bs-toggle="tooltip" data-bs-placement="bottom" title="View PPM Equipment List">
+                            <i class="fas fa-clipboard-check me-2"></i> PPM List
+                        </a>
+                    </li>
+                    <li class="nav-item mx-2">
+                        <a class="nav-link nav-pill fs-5 fw-semibold px-4" href="{{ url_for('views.list_equipment', data_type='ocm') }}" data-bs-toggle="tooltip" data-bs-placement="bottom" title="View OCM Equipment List">
+                            <i class="fas fa-clipboard-list me-2"></i> OCM List
+                        </a>
+                    </li>
+                    <li class="nav-item mx-2">
+                        <a class="nav-link nav-pill fs-5 fw-semibold px-4" href="{{ url_for('views.list_training') }}" data-bs-toggle="tooltip" data-bs-placement="bottom" title="View Training Records">
+                            <i class="fas fa-user-graduate me-2"></i> Training
+                        </a>
+                    </li>
+                    <li class="nav-item mx-2">
+                        <a class="nav-link nav-pill fs-5 fw-semibold px-4" href="{{ url_for('views.import_export_page') }}" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Import/Export Data">
+                            <i class="fas fa-file-import me-2"></i> Import / Export
+                        </a>
+                    </li>
+                    <li class="nav-item mx-2">
+                        <a class="nav-link nav-pill fs-5 fw-semibold px-4" href="{{ url_for('views.settings') }}" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Application Settings">
+                            <i class="fas fa-cog me-2"></i> Settings
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid px-4 mt-5 pt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} shadow-sm alert-dismissible fade show" role="alert">
+                            {% if category == 'success' %}
+                                <i class="fas fa-check-circle me-2"></i>
+                            {% elif category == 'danger' %}
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                            {% elif category == 'warning' %}
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                            {% elif category == 'info' %}
+                                <i class="fas fa-info-circle me-2"></i>
+                            {% endif %}
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="content-wrapper bg-white p-4 rounded shadow-sm">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center py-4 mt-5 bg-light border-top">
+        <div class="container-fluid px-4">
+            <p class="mb-0">&copy; 2023 AL ORF MAINTENANCE | Hospital Equipment Maintenance System</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/equipment_list.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/searchable-select.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/enhanced-ui.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/enhanced-tables.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/theme-manager.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

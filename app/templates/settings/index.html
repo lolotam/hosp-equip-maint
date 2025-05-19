@@ -1,0 +1,560 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style>
+    .settings-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .settings-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+
+    .settings-card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        padding: 15px 20px;
+        border-radius: 10px 10px 0 0;
+    }
+
+    .settings-card-body {
+        padding: 20px;
+    }
+
+    .theme-option {
+        display: inline-block;
+        margin-right: 20px;
+        cursor: pointer;
+    }
+
+    .theme-option input {
+        margin-right: 5px;
+    }
+
+    .theme-preview {
+        width: 100%;
+        height: 100px;
+        border-radius: 8px;
+        margin-top: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+
+    .theme-preview.light {
+        background-color: #ffffff;
+        color: #212529;
+        border: 1px solid #dee2e6;
+    }
+
+    .theme-preview.dark {
+        background-color: #212529;
+        color: #f8f9fa;
+        border: 1px solid #495057;
+    }
+
+    .notification-info {
+        background-color: #f8f9fa;
+        border-left: 4px solid #17a2b8;
+        padding: 15px;
+        margin-top: 15px;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+    <h1 class="mb-4">
+        <i class="fas fa-cog me-2"></i> Settings
+    </h1>
+
+    <ul class="nav nav-tabs mb-4" id="settingsTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="appearance-tab" data-bs-toggle="tab" data-bs-target="#appearance" type="button" role="tab" aria-controls="appearance" aria-selected="true">
+                <i class="fas fa-palette me-2"></i> Appearance
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="notifications-tab" data-bs-toggle="tab" data-bs-target="#notifications" type="button" role="tab" aria-controls="notifications" aria-selected="false">
+                <i class="fas fa-bell me-2"></i> Notifications
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="email-tab" data-bs-toggle="tab" data-bs-target="#email" type="button" role="tab" aria-controls="email" aria-selected="false">
+                <i class="fas fa-envelope me-2"></i> Email Configuration
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="backup-tab" data-bs-toggle="tab" data-bs-target="#backup" type="button" role="tab" aria-controls="backup" aria-selected="false">
+                <i class="fas fa-database me-2"></i> Backup & Restore
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="account-tab" data-bs-toggle="tab" data-bs-target="#account" type="button" role="tab" aria-controls="account" aria-selected="false">
+                <i class="fas fa-user-cog me-2"></i> Account
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="settingsTabContent">
+        <!-- Appearance Tab -->
+        <div class="tab-pane fade show active" id="appearance" role="tabpanel" aria-labelledby="appearance-tab">
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <h5 class="mb-0"><i class="fas fa-moon me-2"></i> Theme Mode</h5>
+                </div>
+                <div class="settings-card-body">
+                    <p>Choose your preferred theme for the application.</p>
+
+                    <div class="theme-options">
+                        <label class="theme-option">
+                            <input type="radio" name="theme" value="light" id="lightTheme" checked>
+                            <i class="fas fa-sun me-1"></i> Light
+                        </label>
+
+                        <label class="theme-option">
+                            <input type="radio" name="theme" value="dark" id="darkTheme">
+                            <i class="fas fa-moon me-1"></i> Dark
+                        </label>
+                    </div>
+
+                    <div class="theme-preview light" id="themePreview">
+                        Theme Preview
+                    </div>
+
+                    <div class="mt-3">
+                        <button class="btn btn-primary" id="saveThemeBtn">
+                            <i class="fas fa-save me-2"></i> Save Theme Preference
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications Tab -->
+        <div class="tab-pane fade" id="notifications" role="tabpanel" aria-labelledby="notifications-tab">
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <h5 class="mb-0"><i class="fas fa-envelope me-2"></i> Email Notifications</h5>
+                </div>
+                <div class="settings-card-body">
+                    <p>Test the email notification system for maintenance reminders.</p>
+
+                    <a href="{{ url_for('views.send_test_notification') }}" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-2"></i> Send Test Email Notification
+                    </a>
+
+                    <div class="notification-info mt-3">
+                        <p class="mb-0"><i class="fas fa-info-circle me-2"></i> This will send a test email with upcoming maintenance tasks to the configured email address.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-card mt-4">
+                <div class="settings-card-header">
+                    <h5 class="mb-0"><i class="fas fa-desktop me-2"></i> Desktop Notifications</h5>
+                </div>
+                <div class="settings-card-body">
+                    <p>Test browser desktop notifications. You may need to grant permission when prompted.</p>
+
+                    <button class="btn btn-secondary" id="testDesktopNotificationBtn">
+                        <i class="fas fa-bell me-2"></i> Test Desktop Notification
+                    </button>
+
+                    <div class="notification-info">
+                        <p class="mb-1"><i class="fas fa-info-circle me-2"></i> Browser notifications require permission:</p>
+                        <ol class="mb-0">
+                            <li>Click the button above</li>
+                            <li>Allow notifications when prompted</li>
+                            <li>You'll receive a test notification if permissions are granted</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Email Configuration Tab -->
+        <div class="tab-pane fade" id="email" role="tabpanel" aria-labelledby="email-tab">
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <h5 class="mb-0"><i class="fas fa-envelope me-2"></i> Email Configuration</h5>
+                </div>
+                <div class="settings-card-body">
+                    <p>Configure email settings for sending maintenance reminders.</p>
+
+                    <form id="emailSettingsForm">
+                        <div class="mb-3">
+                            <label for="smtpUsername" class="form-label">SMTP Username</label>
+                            <input type="email" class="form-control" id="smtpUsername" name="SMTP_USERNAME" required>
+                            <div class="form-text">The email address used for SMTP authentication.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="smtpPassword" class="form-label">SMTP Password</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="smtpPassword" name="SMTP_PASSWORD" required>
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">The password for SMTP authentication.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="emailSender" class="form-label">Email Sender</label>
+                            <input type="email" class="form-control" id="emailSender" name="EMAIL_SENDER" required>
+                            <div class="form-text">The email address that will appear as the sender.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="emailReceiver" class="form-label">Primary Receiver</label>
+                            <input type="email" class="form-control" id="emailReceiver" name="EMAIL_RECEIVER" required>
+                            <div class="form-text">The primary email address that will receive maintenance reminders.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="ccEmail1" class="form-label">CC Email 1</label>
+                            <input type="email" class="form-control" id="ccEmail1" name="CC_EMAIL_1">
+                            <div class="form-text">Optional: Additional email to receive copies of maintenance reminders.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="ccEmail2" class="form-label">CC Email 2</label>
+                            <input type="email" class="form-control" id="ccEmail2" name="CC_EMAIL_2">
+                            <div class="form-text">Optional: Additional email to receive copies of maintenance reminders.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="ccEmail3" class="form-label">CC Email 3</label>
+                            <input type="email" class="form-control" id="ccEmail3" name="CC_EMAIL_3">
+                            <div class="form-text">Optional: Additional email to receive copies of maintenance reminders.</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i> Save Email Settings
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="testEmailBtn">
+                                <i class="fas fa-paper-plane me-2"></i> Test Email Settings
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="emailSettingsAlert" class="alert mt-3 d-none"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Backup & Restore Tab -->
+        <div class="tab-pane fade" id="backup" role="tabpanel" aria-labelledby="backup-tab">
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <h5 class="mb-0"><i class="fas fa-database me-2"></i> Backup & Restore</h5>
+                </div>
+                <div class="settings-card-body">
+                    <p>You can export or import a complete backup of your system data and settings.</p>
+
+                    <div class="d-flex gap-3 flex-wrap mb-4">
+                        <a href="{{ url_for('api.backup_all_data') }}" class="btn btn-primary">
+                            <i class="fas fa-download me-2"></i> Backup All Data
+                        </a>
+                        <button class="btn btn-secondary" id="restoreBackupBtn">
+                            <i class="fas fa-upload me-2"></i> Restore Backup
+                        </button>
+                        <input type="file" id="restoreFileInput" hidden accept=".zip,.json">
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Important:</strong> Restoring a backup will replace all current data. Make sure to create a backup of your current data first.
+                    </div>
+
+                    <div id="restoreProgress" class="progress d-none mt-3">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                    </div>
+
+                    <div id="backupRestoreAlert" class="alert mt-3 d-none"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Tab (Placeholder) -->
+        <div class="tab-pane fade" id="account" role="tabpanel" aria-labelledby="account-tab">
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <h5 class="mb-0"><i class="fas fa-user-shield me-2"></i> Account Settings</h5>
+                </div>
+                <div class="settings-card-body">
+                    <p class="text-muted">Account settings are not available in the current version.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Theme toggle functionality
+        const lightThemeRadio = document.getElementById('lightTheme');
+        const darkThemeRadio = document.getElementById('darkTheme');
+        const themePreview = document.getElementById('themePreview');
+        const saveThemeBtn = document.getElementById('saveThemeBtn');
+        const testDesktopNotificationBtn = document.getElementById('testDesktopNotificationBtn');
+
+        // Backup & Restore functionality
+        const restoreBackupBtn = document.getElementById('restoreBackupBtn');
+        const restoreFileInput = document.getElementById('restoreFileInput');
+        const restoreProgress = document.getElementById('restoreProgress');
+        const progressBar = restoreProgress.querySelector('.progress-bar');
+
+        // Load saved theme from localStorage
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            darkThemeRadio.checked = true;
+            document.body.classList.add('dark-theme');
+            themePreview.className = 'theme-preview dark';
+        } else {
+            lightThemeRadio.checked = true;
+            document.body.classList.remove('dark-theme');
+            themePreview.className = 'theme-preview light';
+        }
+
+        // Update preview when theme option changes
+        lightThemeRadio.addEventListener('change', function() {
+            if (this.checked) {
+                themePreview.className = 'theme-preview light';
+            }
+        });
+
+        darkThemeRadio.addEventListener('change', function() {
+            if (this.checked) {
+                themePreview.className = 'theme-preview dark';
+            }
+        });
+
+        // Save theme preference
+        saveThemeBtn.addEventListener('click', function() {
+            const selectedTheme = document.querySelector('input[name="theme"]:checked').value;
+            localStorage.setItem('theme', selectedTheme);
+
+            if (selectedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+            } else {
+                document.body.classList.remove('dark-theme');
+            }
+
+            // Show success message
+            showAlert('appearance', 'success', 'Theme preference saved successfully!');
+        });
+
+        // Desktop notification test
+        testDesktopNotificationBtn.addEventListener('click', function() {
+            if (!("Notification" in window)) {
+                alert("This browser does not support desktop notifications");
+                return;
+            }
+
+            if (Notification.permission === "granted") {
+                sendTestNotification();
+            } else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(function(permission) {
+                    if (permission === "granted") {
+                        sendTestNotification();
+                    }
+                });
+            }
+        });
+
+        function sendTestNotification() {
+            const notification = new Notification("🛠️ Maintenance Reminder", {
+                body: "This is a test desktop notification from AL ORF MAINTENANCE.",
+                icon: "/static/img/logo.png"
+            });
+
+            notification.onclick = function() {
+                window.focus();
+                notification.close();
+            };
+        }
+
+        // Email Settings Functionality
+        const emailSettingsForm = document.getElementById('emailSettingsForm');
+        const smtpUsername = document.getElementById('smtpUsername');
+        const smtpPassword = document.getElementById('smtpPassword');
+        const emailSender = document.getElementById('emailSender');
+        const emailReceiver = document.getElementById('emailReceiver');
+        const ccEmail1 = document.getElementById('ccEmail1');
+        const ccEmail2 = document.getElementById('ccEmail2');
+        const ccEmail3 = document.getElementById('ccEmail3');
+        const togglePasswordBtn = document.getElementById('togglePassword');
+        const testEmailBtn = document.getElementById('testEmailBtn');
+
+        // Toggle password visibility
+        togglePasswordBtn.addEventListener('click', function() {
+            const type = smtpPassword.getAttribute('type') === 'password' ? 'text' : 'password';
+            smtpPassword.setAttribute('type', type);
+            this.querySelector('i').className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+        });
+
+        // Load email settings
+        fetch('/api/email-settings')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    smtpUsername.value = data.SMTP_USERNAME || '';
+                    smtpPassword.value = data.SMTP_PASSWORD || '';
+                    emailSender.value = data.EMAIL_SENDER || '';
+                    emailReceiver.value = data.EMAIL_RECEIVER || '';
+                    ccEmail1.value = data.CC_EMAIL_1 || '';
+                    ccEmail2.value = data.CC_EMAIL_2 || '';
+                    ccEmail3.value = data.CC_EMAIL_3 || '';
+                } else {
+                    showAlert('email', 'warning', 'Failed to load email settings: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading email settings:', error);
+                showAlert('email', 'danger', 'Error loading email settings: ' + error.message);
+            });
+
+        // Save email settings
+        emailSettingsForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Create the form data object
+            const formData = {
+                SMTP_USERNAME: smtpUsername.value,
+                EMAIL_SENDER: emailSender.value,
+                EMAIL_RECEIVER: emailReceiver.value,
+                CC_EMAIL_1: ccEmail1.value.trim(),
+                CC_EMAIL_2: ccEmail2.value.trim(),
+                CC_EMAIL_3: ccEmail3.value.trim()
+            };
+
+            // Only include password if it's not masked (i.e., user has changed it)
+            // Check if the password field contains only asterisks
+            if (smtpPassword.value && !/^\*+$/.test(smtpPassword.value)) {
+                formData.SMTP_PASSWORD = smtpPassword.value;
+            }
+
+            console.log('Sending form data:', {...formData, SMTP_PASSWORD: formData.SMTP_PASSWORD ? '(password provided)' : '(password not changed)'});
+
+            fetch('/api/email-settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('email', 'success', 'Email settings saved successfully and written to .env file!');
+                } else {
+                    showAlert('email', 'danger', 'Failed to save email settings: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error saving email settings:', error);
+                showAlert('email', 'danger', 'Error saving email settings: ' + error.message);
+            });
+        });
+
+        // Test email settings
+        testEmailBtn.addEventListener('click', function() {
+            window.location.href = '/send-test-notification';
+        });
+
+        // Backup & Restore functionality
+        restoreBackupBtn.addEventListener('click', function() {
+            // Show a confirmation dialog
+            if (confirm('Warning: Restoring a backup will replace all current data. Are you sure you want to proceed?')) {
+                restoreFileInput.click();
+            }
+        });
+
+        restoreFileInput.addEventListener('change', function(e) {
+            if (!this.files || !this.files[0]) {
+                return;
+            }
+
+            const file = this.files[0];
+
+            // Check file type
+            if (!file.name.endsWith('.zip') && !file.name.endsWith('.json')) {
+                showAlert('backup', 'danger', 'Invalid file format. Please select a .zip or .json file.');
+                return;
+            }
+
+            // Show progress bar
+            restoreProgress.classList.remove('d-none');
+            progressBar.style.width = '10%';
+
+            // Create FormData
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Send the file to the server
+            fetch('/api/restore', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                progressBar.style.width = '50%';
+                return response.json();
+            })
+            .then(data => {
+                progressBar.style.width = '100%';
+
+                setTimeout(() => {
+                    restoreProgress.classList.add('d-none');
+
+                    if (data.success) {
+                        showAlert('backup', 'success', 'Backup restored successfully! The page will reload in 3 seconds.');
+
+                        // Reload the page after 3 seconds
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 3000);
+                    } else {
+                        showAlert('backup', 'danger', `Failed to restore backup: ${data.error}`);
+                    }
+                }, 500);
+            })
+            .catch(error => {
+                restoreProgress.classList.add('d-none');
+                showAlert('backup', 'danger', `Error restoring backup: ${error.message}`);
+            });
+
+            // Reset the file input
+            this.value = '';
+        });
+
+        // Helper function to show alerts
+        function showAlert(tabId, type, message) {
+            const alertContainer = document.querySelector(`#${tabId} .settings-card-body`);
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show mt-3`;
+            alert.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'exclamation-circle'} me-2"></i> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            alertContainer.appendChild(alert);
+
+            // Auto dismiss after 3 seconds
+            setTimeout(() => {
+                alert.classList.remove('show');
+                setTimeout(() => alert.remove(), 150);
+            }, 3000);
+        }
+    });
+</script>
+{% endblock %}
