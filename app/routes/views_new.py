@@ -19,6 +19,7 @@ from werkzeug.utils import secure_filename
 from app.services.data_service import DataService
 from app.services.validation import ValidationService
 from app.services.import_export import ImportExportService
+from app.routes.auth import login_required
 
 views_bp = Blueprint('views', __name__)
 logger = logging.getLogger(__name__)
@@ -202,6 +203,12 @@ def calculate_equipment_status(entry, data_type):
 @views_bp.route('/')
 def index():
     """Display the dashboard with maintenance statistics."""
+    from flask import session
+    
+    # Check if user is logged in, if not redirect to login
+    if not session.get('logged_in'):
+        return redirect(url_for('auth.login'))
+    
     from datetime import datetime
 
     # Get combined data for the dashboard

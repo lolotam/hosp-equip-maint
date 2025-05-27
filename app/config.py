@@ -19,6 +19,10 @@ class Config:
     DEBUG = False
     TESTING = False
     
+    # Session configuration
+    SESSION_PERMANENT = False
+    SESSION_TYPE = 'filesystem'
+    
     # File upload settings
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
     UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER') or 'uploads'
