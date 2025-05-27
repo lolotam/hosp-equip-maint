@@ -113,3 +113,7 @@ def start_email_scheduler():
         logging.error(f"Error in email scheduler: {str(e)}")
     finally:
         loop.close()
+
+
+# Create a default app instance for production deployment
+app = create_app(os.environ.get('FLASK_ENV', 'production'))

@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: al-orf-maintenance
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: "./build.sh"
+    startCommand: "./start.sh"
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATA_DIR
+        value: /opt/render/project/src/data
+      - key: UPLOAD_FOLDER
+        value: /opt/render/project/src/uploads 
