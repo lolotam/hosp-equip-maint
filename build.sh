@@ -13,6 +13,7 @@ mkdir -p uploads
 mkdir -p logs
 
 # Set proper permissions
-chmod +x gunicorn.conf.py
+chmod +x start.sh
+chmod +x wsgi.py
 
 echo "Build completed successfully!" 
