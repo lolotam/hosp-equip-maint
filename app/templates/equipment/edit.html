@@ -120,6 +120,41 @@
                 </div>
                 {% include 'equipment/_ocm_fields.html' %}
                 {% endif %}
+                
+                <!-- Installation Date and Warranty End fields for both PPM and OCM -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="INSTALLATION_DATE" class="form-label">Installation Date</label>
+                        <input type="text" class="form-control datepicker {% if errors.INSTALLATION_DATE %}is-invalid{% endif %}" 
+                               id="INSTALLATION_DATE" name="INSTALLATION_DATE" 
+                               value="{{ form_data.get('INSTALLATION_DATE', '') or form_data.get('installation_date', '') }}" 
+                               placeholder="DD/MM/YYYY">
+                        {% if errors.INSTALLATION_DATE %}
+                            <div class="invalid-feedback">
+                                {% for error in errors.INSTALLATION_DATE %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                                                 {% endif %}
+                         <small class="text-muted">Click the calendar icon or type DD/MM/YYYY format (leave empty if unknown)</small>
+                     </div>
+                     <div class="col-md-6">
+                        <label for="WARRANTY_END" class="form-label">End of Warranty</label>
+                        <input type="text" class="form-control datepicker {% if errors.WARRANTY_END %}is-invalid{% endif %}" 
+                               id="WARRANTY_END" name="WARRANTY_END" 
+                               value="{{ form_data.get('WARRANTY_END', '') or form_data.get('end_of_warranty', '') }}" 
+                               placeholder="DD/MM/YYYY">
+                        {% if errors.WARRANTY_END %}
+                            <div class="invalid-feedback">
+                                {% for error in errors.WARRANTY_END %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                                                 {% endif %}
+                         <small class="text-muted">Click the calendar icon or type DD/MM/YYYY format (leave empty if unknown)</small>
+                     </div>
+                 </div>
+                
                 <button type="submit" class="btn btn-primary">Update Equipment</button>
             </div>
         </div>

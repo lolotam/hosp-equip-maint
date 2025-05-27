@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Date Picker Test Page</h2>
+    
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        This page is for testing the date picker functionality. Check the browser console for debug messages.
+    </div>
+    
+    <form>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="test_installation_date" class="form-label">Installation Date (Test)</label>
+                <input type="text" class="form-control datepicker" 
+                       id="test_installation_date" name="test_installation_date" 
+                       placeholder="DD/MM/YYYY">
+                <small class="text-muted">Click the calendar icon or type DD/MM/YYYY format</small>
+            </div>
+            <div class="col-md-6">
+                <label for="test_warranty_end" class="form-label">Warranty End (Test)</label>
+                <input type="text" class="form-control datepicker" 
+                       id="test_warranty_end" name="test_warranty_end" 
+                       placeholder="DD/MM/YYYY">
+                <small class="text-muted">Click the calendar icon or type DD/MM/YYYY format</small>
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="test_last_date" class="form-label">Last Date (Test)</label>
+                <input type="text" class="form-control datepicker" 
+                       id="test_last_date" name="test_last_date" 
+                       placeholder="DD/MM/YYYY">
+                <small class="text-muted">Click the calendar icon or type DD/MM/YYYY format</small>
+            </div>
+            <div class="col-md-6">
+                <label for="test_ppm_date" class="form-label">PPM Q1 Date (Test)</label>
+                <input type="text" class="form-control datepicker" 
+                       id="test_ppm_date" name="test_ppm_date" 
+                       placeholder="DD/MM/YYYY">
+                <small class="text-muted">Click the calendar icon or type DD/MM/YYYY format</small>
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <button type="button" class="btn btn-primary" onclick="testDatePickers()">Test Date Pickers</button>
+            <button type="button" class="btn btn-secondary" onclick="checkConsole()">Check Console</button>
+        </div>
+    </form>
+    
+    <div id="test-results" class="mt-4"></div>
+</div>
+
+<script>
+function testDatePickers() {
+    const results = document.getElementById('test-results');
+    let html = '<div class="alert alert-info"><h5>Date Picker Test Results:</h5><ul>';
+    
+    // Check if Flatpickr is loaded
+    if (typeof flatpickr !== 'undefined') {
+        html += '<li class="text-success">✓ Flatpickr library is loaded</li>';
+    } else {
+        html += '<li class="text-danger">✗ Flatpickr library is NOT loaded</li>';
+    }
+    
+    // Check date picker elements
+    const datepickerElements = document.querySelectorAll('.datepicker');
+    html += `<li>Found ${datepickerElements.length} elements with datepicker class</li>`;
+    
+    // Check if date pickers are initialized
+    let initializedCount = 0;
+    datepickerElements.forEach(element => {
+        if (element._flatpickr) {
+            initializedCount++;
+        }
+    });
+    
+    html += `<li>Initialized date pickers: ${initializedCount}/${datepickerElements.length}</li>`;
+    
+    // Check for icons
+    const icons = document.querySelectorAll('.datepicker-icon');
+    html += `<li>Found ${icons.length} date picker icons</li>`;
+    
+    html += '</ul></div>';
+    results.innerHTML = html;
+}
+
+function checkConsole() {
+    alert('Check the browser console (F12) for debug messages from the date picker script.');
+}
+
+// Auto-run test when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(testDatePickers, 1000); // Wait 1 second for everything to load
+});
+</script>
+{% endblock %} 

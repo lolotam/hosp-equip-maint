@@ -51,6 +51,35 @@
             <div class="text-danger">{{ errors.DEPARTMENT[0] }}</div>
             {% endif %}
         </div>
+        <!-- Add these fields to the form for both PPM and OCM -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="INSTALLATION_DATE" class="form-label">Installation Date</label>
+                <input type="text" class="form-control datepicker {% if errors.INSTALLATION_DATE %}is-invalid{% endif %}" 
+                       id="INSTALLATION_DATE" name="INSTALLATION_DATE" 
+                       value="{{ form_data.INSTALLATION_DATE or '' }}" 
+                       placeholder="DD/MM/YYYY">
+                {% if errors.INSTALLATION_DATE %}
+                <div class="invalid-feedback">
+                    {{ errors.INSTALLATION_DATE }}
+                </div>
+                {% endif %}
+                <small class="text-muted">Click the calendar icon or type DD/MM/YYYY format (leave empty if unknown)</small>
+            </div>
+            <div class="col-md-6">
+                <label for="WARRANTY_END" class="form-label">End of Warranty</label>
+                <input type="text" class="form-control datepicker {% if errors.WARRANTY_END %}is-invalid{% endif %}" 
+                       id="WARRANTY_END" name="WARRANTY_END" 
+                       value="{{ form_data.WARRANTY_END or '' }}" 
+                       placeholder="DD/MM/YYYY">
+                {% if errors.WARRANTY_END %}
+                <div class="invalid-feedback">
+                    {{ errors.WARRANTY_END }}
+                </div>
+                {% endif %}
+                <small class="text-muted">Click the calendar icon or type DD/MM/YYYY format (leave empty if unknown)</small>
+            </div>
+        </div>
         {% if data_type == 'ppm' %}
         <div class="mb-3">
             <label for="PPM" class="form-label">PPM</label>
@@ -64,10 +93,11 @@
         </div>
         <div class="mb-3">
             <label for="PPM_Q_I_date" class="form-label">PPM Quarter I Date</label>
-            <input type="text" class="form-control" id="PPM_Q_I_date" name="PPM_Q_I_date" value="{{ form_data['PPM_Q_I_date'] or '' }}" pattern="\d{2}/\d{2}/\d{4}" placeholder="DD/MM/YYYY" required>
+            <input type="text" class="form-control datepicker" id="PPM_Q_I_date" name="PPM_Q_I_date" value="{{ form_data['PPM_Q_I_date'] or '' }}" placeholder="DD/MM/YYYY" required>
             {% if errors['PPM_Q_I_date'] %}
             <div class="text-danger">{{ errors['PPM_Q_I_date'][0] }}</div>
             {% endif %}
+            <small class="text-muted">Click the calendar icon or type DD/MM/YYYY format</small>
         </div>
         {% for q in ['I', 'II', 'III', 'IV'] %}
         <div class="mb-3">
@@ -91,8 +121,8 @@
         </div>
         <div class="mb-3">
             <label for="Last_Date" class="form-label">Last Date</label>
-            <input type="text" class="form-control" id="Last_Date" name="Last_Date" value="{{ form_data.Last_Date or '' }}" pattern="\d{2}/\d{2}/\d{4}" placeholder="DD/MM/YYYY" required>
-            <small class="text-muted">Next Date will be auto-calculated as 1 year after Last Date</small>
+            <input type="text" class="form-control datepicker" id="Last_Date" name="Last_Date" value="{{ form_data.Last_Date or '' }}" placeholder="DD/MM/YYYY" required>
+            <small class="text-muted">Click the calendar icon or type DD/MM/YYYY format. Next Date will be auto-calculated as 1 year after Last Date</small>
             {% if errors.Last_Date %}
             <div class="text-danger">{{ errors.Last_Date[0] }}</div>
             {% endif %}
@@ -110,3 +140,7 @@
     </form>
 </div>
 {% endblock %}
+
+<!-- Date pickers are now initialized by the global datepicker.js file -->
+
+

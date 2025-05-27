@@ -44,6 +44,9 @@ class PPMEntry(BaseModel):
     PPM_Q_II: QuarterData
     PPM_Q_III: QuarterData
     PPM_Q_IV: QuarterData
+    installation_date: Optional[str] = None  # Installation date (DD/MM/YYYY or None)
+    end_of_warranty: Optional[str] = None  # Warranty end date (DD/MM/YYYY or None)
+    status_override: Optional[str] = None  # Manual status override (e.g., 'OK', 'Due Soon', 'Overdue', 'Invalid Date')
 
     @field_validator('PPM')
     @classmethod
@@ -69,6 +72,27 @@ class PPMEntry(BaseModel):
         """Validate other fields (can be 'n/a')."""
         return v.strip()
 
+    @field_validator('installation_date', 'end_of_warranty')
+    @classmethod
+    def validate_optional_date(cls, v: str | None) -> str | None:
+        if v is None or v.strip() == '' or v.strip().lower() == 'n/a':
+            return None
+        try:
+            datetime.strptime(v.strip(), '%d/%m/%Y')
+            return v.strip()
+        except ValueError:
+            raise ValueError("Date must be in DD/MM/YYYY format or empty/n/a")
+
+    @field_validator('status_override')
+    @classmethod
+    def validate_status_override(cls, v: str | None) -> str | None:
+        allowed = {None, '', 'OK', 'Due Soon', 'Overdue', 'Invalid Date'}
+        if v is None or v.strip() == '' or v.strip().lower() == 'n/a':
+            return None
+        if v not in allowed:
+            raise ValueError(f"status_override must be one of {allowed}")
+        return v
+
     @model_validator(mode='after')
     def validate_model(self) -> 'PPMEntry':
         """Validate the complete model."""
@@ -90,3 +114,4 @@ class PPMEntryCreate(BaseModel):
     PPM_Q_II: Dict[str, str]
     PPM_Q_III: Dict[str, str]
     PPM_Q_IV: Dict[str, str]
+

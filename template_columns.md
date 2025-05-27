@@ -20,6 +20,8 @@
 | Q3_ENGINEER | Q3 maintenance engineer | Text | No | Can be 'n/a' if unknown |
 | PPM Q IV | Q4 maintenance date | DD/MM/YYYY | No | Auto-generated from Q1 date |
 | Q4_ENGINEER | Q4 maintenance engineer | Text | No | Can be 'n/a' if unknown |
+| INSTALLATION_DATE | Installation date | DD/MM/YYYY | No | Can be 'n/a' if unknown |
+| WARRANTY_END | End of warranty date | DD/MM/YYYY | No | Can be 'n/a' if unknown |
 
 ## 2. OCM (Other Corrective Maintenance) Template
 
@@ -33,9 +35,10 @@
 | LOG_NO | Log number | Text | Yes | Can be 'n/a' if unknown |
 | DEPARTMENT | Department name | Text | Yes | Can be 'n/a' if unknown |
 | OCM | OCM status | 'Yes' or 'No' | Yes | Case-insensitive, will be normalized |
-| OCM_2024 | 2024 OCM date | Text | Yes | Can be 'n/a' if unknown |
+| Last_Date | Last maintenance date | DD/MM/YYYY | Yes | **Must be in DD/MM/YYYY format** |
 | ENGINEER | Maintenance engineer | Text | Yes | Can be 'n/a' if unknown |
-| OCM_2025 | 2025 OCM date | Text | Yes | Can be 'n/a' if unknown |
+| INSTALLATION_DATE | Installation date | DD/MM/YYYY | No | Can be 'n/a' if unknown |
+| WARRANTY_END | End of warranty date | DD/MM/YYYY | No | Can be 'n/a' if unknown |
 
 ## 3. Training Template
 
@@ -78,14 +81,14 @@
 
 ### PPM Sample Row
 ```
-EQUIPMENT,MODEL,MFG_SERIAL,MANUFACTURER,LOG_NO,DEPARTMENT,PPM,PPM Q I,Q1_ENGINEER,PPM Q II,Q2_ENGINEER,PPM Q III,Q3_ENGINEER,PPM Q IV,Q4_ENGINEER
-Ventilator,XYZ-100,SN12345,Medical Systems Inc,LOG001,LDR,Yes,01/01/2024,John Doe,01/04/2024,Jane Smith,01/07/2024,John Doe,01/10/2024,Jane Smith
+EQUIPMENT,MODEL,MFG_SERIAL,MANUFACTURER,LOG_NO,DEPARTMENT,PPM,PPM Q I,Q1_ENGINEER,PPM Q II,Q2_ENGINEER,PPM Q III,Q3_ENGINEER,PPM Q IV,Q4_ENGINEER,INSTALLATION_DATE,WARRANTY_END
+Ventilator,XYZ-100,SN12345,Medical Systems Inc,LOG001,LDR,Yes,01/01/2024,John Doe,01/04/2024,Jane Smith,01/07/2024,John Doe,01/10/2024,Jane Smith,15/06/2023,15/06/2025
 ```
 
 ### OCM Sample Row
 ```
-EQUIPMENT,MODEL,MFG_SERIAL,MANUFACTURER,LOG_NO,DEPARTMENT,OCM,OCM_2024,ENGINEER,OCM_2025
-Ventilator,XYZ-100,SN12345,Medical Systems Inc,LOG001,LDR,Yes,01/06/2024,John Doe,01/06/2025
+EQUIPMENT,MODEL,MFG_SERIAL,MANUFACTURER,LOG_NO,DEPARTMENT,OCM,Last_Date,ENGINEER,INSTALLATION_DATE,WARRANTY_END
+Ventilator,XYZ-100,SN12345,Medical Systems Inc,LOG001,LDR,Yes,01/06/2024,John Doe,15/06/2023,15/06/2025
 ```
 
 ### Training Sample Row
@@ -93,3 +96,5 @@ Ventilator,XYZ-100,SN12345,Medical Systems Inc,LOG001,LDR,Yes,01/06/2024,John Do
 NAME,ID,DEPARTMENT,MACHINE 1,MACHINE 1 TRAINER,MACHINE 2,MACHINE 2 TRAINER,MACHINE 3,MACHINE 3 TRAINER,MACHINE 4,MACHINE 4 TRAINER,MACHINE 5,MACHINE 5 TRAINER,MACHINE 6,MACHINE 6 TRAINER,MACHINE 7,MACHINE 7 TRAINER
 John Doe,EMP001,LDR,Yes,Jane Smith,No,No,No,No,No,No,No,No,No,No,No,No
 ```
+
+

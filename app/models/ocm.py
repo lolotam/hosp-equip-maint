@@ -21,6 +21,9 @@ class OCMEntry(BaseModel):
     Last_Date: str  # Last maintenance date
     ENGINEER: str
     Next_Date: str  # Next maintenance date (auto-calculated)
+    installation_date: Optional[str] = None  # Installation date (DD/MM/YYYY or None)
+    end_of_warranty: Optional[str] = None  # Warranty end date (DD/MM/YYYY or None)
+    status_override: Optional[str] = None  # Manual status override (e.g., 'OK', 'Due Soon', 'Overdue', 'Invalid Date')
 
     @field_validator('OCM')
     @classmethod
@@ -87,6 +90,27 @@ class OCMEntry(BaseModel):
         """Validate other fields (can be 'n/a')."""
         return v.strip()
 
+    @field_validator('installation_date', 'end_of_warranty')
+    @classmethod
+    def validate_optional_date(cls, v: str | None) -> str | None:
+        if v is None or v.strip() == '' or v.strip().lower() == 'n/a':
+            return None
+        try:
+            datetime.strptime(v.strip(), '%d/%m/%Y')
+            return v.strip()
+        except ValueError:
+            raise ValueError("Date must be in DD/MM/YYYY format or empty/n/a")
+
+    @field_validator('status_override')
+    @classmethod
+    def validate_status_override(cls, v: str | None) -> str | None:
+        allowed = {None, '', 'OK', 'Due Soon', 'Overdue', 'Invalid Date'}
+        if v is None or v.strip() == '' or v.strip().lower() == 'n/a':
+            return None
+        if v not in allowed:
+            raise ValueError(f"status_override must be one of {allowed}")
+        return v
+
 
 class OCMEntryCreate(BaseModel):
     """Model for creating a new OCM entry (without NO field)."""
@@ -101,3 +125,5 @@ class OCMEntryCreate(BaseModel):
     Last_Date: str
     ENGINEER: str
     Next_Date: Optional[str] = None  # Will be auto-generated if not provided
+
+

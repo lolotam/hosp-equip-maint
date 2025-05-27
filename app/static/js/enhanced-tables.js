@@ -94,7 +94,18 @@ function initColumnSorting(table) {
         // Make header cell sortable
         headerCell.classList.add('sortable');
         headerCell.dataset.sortDirection = 'none';
-        headerCell.dataset.columnIndex = index + 1; // +1 because of row number column
+        
+        // Calculate the actual column index in the table
+        // Find the position of this header cell among all header cells
+        const allHeaderCells = table.querySelectorAll('thead th');
+        let actualColumnIndex = 0;
+        for (let i = 0; i < allHeaderCells.length; i++) {
+            if (allHeaderCells[i] === headerCell) {
+                actualColumnIndex = i;
+                break;
+            }
+        }
+        headerCell.dataset.columnIndex = actualColumnIndex;
         
         // Add click event for sorting
         headerCell.addEventListener('click', function() {
@@ -162,8 +173,12 @@ function sortTable(table, columnIndex, direction) {
         
         // Sort rows
         const sortedRows = rows.sort((a, b) => {
-            const aValue = a.cells[columnIndex]?.textContent.trim() || '';
-            const bValue = b.cells[columnIndex]?.textContent.trim() || '';
+            let aValue = a.cells[columnIndex]?.textContent.trim() || '';
+            let bValue = b.cells[columnIndex]?.textContent.trim() || '';
+            
+            // Treat 'n/a' as empty for sorting purposes
+            if (aValue.toLowerCase() === 'n/a') aValue = '';
+            if (bValue.toLowerCase() === 'n/a') bValue = '';
             
             // Check if values are dates (DD/MM/YYYY format)
             const aDate = parseDate(aValue);
@@ -181,10 +196,15 @@ function sortTable(table, columnIndex, direction) {
                 return direction === 'asc' ? aNum - bNum : bNum - aNum;
             }
             
-            // Default string comparison
+            // Handle empty values - put them at the end
+            if (aValue === '' && bValue === '') return 0;
+            if (aValue === '') return direction === 'asc' ? 1 : -1;
+            if (bValue === '') return direction === 'asc' ? -1 : 1;
+            
+            // Default string comparison (case-insensitive)
             return direction === 'asc' 
-                ? aValue.localeCompare(bValue) 
-                : bValue.localeCompare(aValue);
+                ? aValue.toLowerCase().localeCompare(bValue.toLowerCase()) 
+                : bValue.toLowerCase().localeCompare(aValue.toLowerCase());
         });
         
         // Clear tbody and append sorted rows

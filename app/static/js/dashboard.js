@@ -7,12 +7,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const resetButton = document.getElementById('resetFilters');
     const tableBody = document.querySelector('#machineTable tbody');
 
-    // Sorting elements
-    const sortableHeaders = document.querySelectorAll('.sortable');
-    let currentSort = {
-        column: null,
-        direction: 'asc'
-    };
+    // Note: Sorting is now handled by enhanced-tables.js
+    // Removed conflicting sorting logic to avoid interference
 
     // Filter table based on search and filter values
     function filterTable() {
@@ -43,52 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Sort table based on column and direction
-    function sortTable(column, direction) {
-        const rows = Array.from(tableBody.getElementsByTagName('tr'));
-
-        // Update sort icons
-        sortableHeaders.forEach(header => {
-            const headerColumn = header.getAttribute('data-sort');
-            const icon = header.querySelector('i');
-
-            if (headerColumn === column) {
-                icon.className = direction === 'asc'
-                    ? 'fas fa-sort-up ms-1'
-                    : 'fas fa-sort-down ms-1';
-            } else {
-                icon.className = 'fas fa-sort ms-1';
-            }
-        });
-
-        // Sort rows
-        rows.sort((a, b) => {
-            const aValue = a.getAttribute(`data-${column}`).toLowerCase();
-            const bValue = b.getAttribute(`data-${column}`).toLowerCase();
-
-            // Handle date sorting for next-maintenance
-            if (column === 'next-maintenance' && aValue !== 'not scheduled' && bValue !== 'not scheduled') {
-                const aDate = parseDate(aValue);
-                const bDate = parseDate(bValue);
-
-                if (aDate && bDate) {
-                    return direction === 'asc' ? aDate - bDate : bDate - aDate;
-                }
-            }
-
-            // Default string comparison
-            if (direction === 'asc') {
-                return aValue.localeCompare(bValue);
-            } else {
-                return bValue.localeCompare(aValue);
-            }
-        });
-
-        // Reorder rows in the table
-        rows.forEach(row => {
-            tableBody.appendChild(row);
-        });
-    }
+    // Sorting is now handled by enhanced-tables.js
 
     // Helper function to parse date in DD/MM/YYYY format
     function parseDate(dateStr) {
@@ -115,27 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Event listeners for sorting
-    sortableHeaders.forEach(header => {
-        header.addEventListener('click', () => {
-            const column = header.getAttribute('data-sort');
-
-            // Toggle direction if clicking the same column
-            let direction = 'asc';
-            if (currentSort.column === column) {
-                direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-            }
-
-            // Update current sort
-            currentSort = {
-                column: column,
-                direction: direction
-            };
-
-            // Sort the table
-            sortTable(column, direction);
-        });
-    });
+    // Sorting event listeners are now handled by enhanced-tables.js
 
     // Export table to CSV function
     function handleExportTableCSV() {

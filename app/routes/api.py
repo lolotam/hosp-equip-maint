@@ -721,3 +721,46 @@ def update_email_settings():
             'success': False,
             'error': f"Failed to update email settings: {str(e)}"
         }), 500
+
+@api_bp.route('/equipment/<data_type>/<mfg_serial>/status', methods=['PUT'])
+def update_equipment_status(data_type, mfg_serial):
+    """Update the status override for an equipment entry."""
+    if data_type not in ('ppm', 'ocm'):
+        return jsonify({"error": "Invalid data type"}), 400
+
+    if not request.is_json:
+        return jsonify({"error": "Request must be JSON"}), 400
+
+    data = request.get_json()
+    status = data.get('status')
+
+    # Validate status value
+    allowed_statuses = ['OK', 'Due Soon', 'Overdue', None, '']
+    if status not in allowed_statuses:
+        return jsonify({"error": f"Invalid status. Must be one of: {allowed_statuses}"}), 400
+
+    try:
+        # Get the current entry
+        current_entry = DataService.get_entry(data_type, mfg_serial)
+        if not current_entry:
+            return jsonify({"error": f"Equipment with serial '{mfg_serial}' not found"}), 404
+
+        # Update only the status_override field
+        update_data = current_entry.copy()
+        update_data['status_override'] = status if status else None
+
+        # Update the entry
+        updated_entry = DataService.update_entry(data_type, mfg_serial, update_data)
+        return jsonify({
+            "success": True,
+            "status": status,
+            "mfg_serial": mfg_serial
+        }), 200
+    except ValueError as e:
+        logger.warning(f"Validation error updating status for {data_type} entry {mfg_serial}: {str(e)}")
+        return jsonify({"error": str(e)}), 400
+    except KeyError:
+        return jsonify({"error": f"Equipment with serial '{mfg_serial}' not found"}), 404
+    except Exception as e:
+        logger.error(f"Error updating status for {data_type} entry {mfg_serial}: {str(e)}")
+        return jsonify({"error": "Failed to update equipment status"}), 500

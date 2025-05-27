@@ -10,33 +10,23 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
-    let sortDirection = 1;
-    let lastSortColumn = '';
+    // Note: Sorting is now handled by enhanced-tables.js
+    // Removed conflicting sorting logic to avoid interference
     
     searchInput.addEventListener('input', updateTable);
     filterSelect.addEventListener('change', updateTable);
-    sortSelect.addEventListener('change', () => {
-        if (sortSelect.value === lastSortColumn) {
-            sortDirection *= -1;
-        } else {
-            sortDirection = 1;
-        }
-        lastSortColumn = sortSelect.value;
-        updateTable();
-    });
+    // sortSelect event listener removed - sorting now handled by enhanced-tables.js
 
     function updateTable() {
         try {
             console.log('Updating table:', {
                 search: searchInput.value,
-                filter: filterSelect.value,
-                sort: sortSelect.value
+                filter: filterSelect.value
             });
 
             const rows = Array.from(tableBody.getElementsByTagName('tr'));
             const searchTerm = searchInput.value.toLowerCase();
             const filterValue = filterSelect.value.toLowerCase();
-            const sortColumn = sortSelect.value;
 
             // Filter and search
             rows.forEach(row => {
@@ -54,21 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Sort
-            if (sortColumn && getColumnIndex(sortColumn) !== 0) {
-                const visibleRows = rows.filter(row => row.style.display !== 'none');
-                const sortedRows = visibleRows.sort((a, b) => {
-                    const columnIndex = getColumnIndex(sortColumn);
-                    const aValue = a.cells[columnIndex]?.textContent || '';
-                    const bValue = b.cells[columnIndex]?.textContent || '';
-                    return aValue.localeCompare(bValue) * sortDirection;
-                });
-                const fragment = document.createDocumentFragment();
-                sortedRows.forEach(row => fragment.appendChild(row));
-                // Clear table before appending sorted rows
-                tableBody.innerHTML = '';
-                tableBody.appendChild(fragment);
-            }
+            // Sorting is now handled by enhanced-tables.js
 
             // After updating the table, re-attach event listeners to checkboxes
             attachCheckboxEventListeners();
@@ -78,16 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    const columnMap = {
-        'EQUIPMENT': 1,
-        'MODEL': 2,
-        'MFG_SERIAL': 3,
-        'MANUFACTURER': 4
-    };
-
-    function getColumnIndex(columnName) {
-        return columnMap[columnName] || 0;
-    }
+    // Column mapping removed - sorting now handled by enhanced-tables.js
 
     // Bulk delete functionality
     const selectAllCheckbox = document.getElementById('selectAll');

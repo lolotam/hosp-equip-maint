@@ -496,6 +496,10 @@ class DataService:
 
                 # Populate entry with normalized values, auto-filling empty fields with "n/a"
                 if data_type == 'ppm':
+                    # Handle installation_date and end_of_warranty fields
+                    installation_date = row_dict.get('INSTALLATION_DATE', '').strip()
+                    end_of_warranty = row_dict.get('WARRANTY_END', '').strip()
+                    
                     combined_entry.update({
                         'EQUIPMENT': row_dict.get('EQUIPMENT', '').strip() or 'n/a',
                         'MODEL': row_dict.get('MODEL', '').strip() or 'n/a',
@@ -505,6 +509,8 @@ class DataService:
                         'DEPARTMENT': row_dict.get('DEPARTMENT', '').strip() or 'n/a',
                         'PPM': row_dict.get('PPM', '').strip().capitalize() if 'PPM' in row_dict else '',
                         'OCM': row_dict.get('OCM', '').strip().capitalize() if 'OCM' in row_dict else '',
+                        'installation_date': installation_date if installation_date and installation_date.lower() != 'n/a' else None,
+                        'end_of_warranty': end_of_warranty if end_of_warranty and end_of_warranty.lower() != 'n/a' else None,
                     })
                 else:  # OCM data type
                     # Get Last_Date from the CSV
@@ -528,6 +534,10 @@ class DataService:
                         errors.append(msg)
                         next_date = 'n/a'
 
+                    # Handle installation_date and end_of_warranty fields for OCM
+                    installation_date = row_dict.get('INSTALLATION_DATE', '').strip()
+                    end_of_warranty = row_dict.get('WARRANTY_END', '').strip()
+
                     combined_entry.update({
                         'EQUIPMENT': row_dict.get('EQUIPMENT', '').strip() or 'n/a',
                         'MODEL': row_dict.get('MODEL', '').strip() or 'n/a',
@@ -540,6 +550,8 @@ class DataService:
                         'Last_Date': last_date,
                         'ENGINEER': row_dict.get('ENGINEER', '').strip() or 'n/a',
                         'Next_Date': next_date,
+                        'installation_date': installation_date if installation_date and installation_date.lower() != 'n/a' else None,
+                        'end_of_warranty': end_of_warranty if end_of_warranty and end_of_warranty.lower() != 'n/a' else None,
                     })
 
                 # Normalize PPM value to match Literal['Yes', 'No']
@@ -858,10 +870,11 @@ class DataService:
             # Define column orders first to ensure all fields are included
             if data_type == 'ppm':
                 columns_order = ['NO', 'EQUIPMENT', 'MODEL', 'MFG_SERIAL', 'MANUFACTURER', 'LOG_NO', 'DEPARTMENT', 'PPM',
-                               'PPM Q I', 'Q1_ENGINEER', 'PPM Q II', 'Q2_ENGINEER', 'PPM Q III', 'Q3_ENGINEER', 'PPM Q IV', 'Q4_ENGINEER']
+                               'PPM Q I', 'Q1_ENGINEER', 'PPM Q II', 'Q2_ENGINEER', 'PPM Q III', 'Q3_ENGINEER', 'PPM Q IV', 'Q4_ENGINEER',
+                               'INSTALLATION_DATE', 'WARRANTY_END']
             else:  # OCM
                 columns_order = ['NO', 'EQUIPMENT', 'MODEL', 'MFG_SERIAL', 'MANUFACTURER', 'LOG_NO', 'DEPARTMENT', 'OCM',
-                               'Last_Date', 'ENGINEER', 'Next_Date']
+                               'Last_Date', 'ENGINEER', 'Next_Date', 'INSTALLATION_DATE', 'WARRANTY_END']
 
             # For PPM and OCM data
             for entry in data:
@@ -887,11 +900,19 @@ class DataService:
                         q_data = entry.get(q_key, {})
                         flat_entry[f'PPM Q {roman}'] = q_data.get('date', '')
                         flat_entry[f'Q{num}_ENGINEER'] = q_data.get('engineer', '')
+                    
+                    # Add installation and warranty fields for PPM
+                    flat_entry['INSTALLATION_DATE'] = entry.get('installation_date', '')
+                    flat_entry['WARRANTY_END'] = entry.get('end_of_warranty', '')
                 elif data_type == 'ocm':
                     flat_entry['OCM'] = entry.get('OCM', '')
                     flat_entry['Last_Date'] = entry.get('Last_Date', '')
                     flat_entry['ENGINEER'] = entry.get('ENGINEER', '')
                     flat_entry['Next_Date'] = entry.get('Next_Date', '')
+                    
+                    # Add installation and warranty fields for OCM
+                    flat_entry['INSTALLATION_DATE'] = entry.get('installation_date', '')
+                    flat_entry['WARRANTY_END'] = entry.get('end_of_warranty', '')
 
                 flat_data.append(flat_entry)
 

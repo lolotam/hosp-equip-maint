@@ -13,8 +13,11 @@ from pathlib import Path
 from flask import Flask
 
 
-def create_app():
+def create_app(config_name=None):
     """Create and configure the Flask application.
+
+    Args:
+        config_name: Configuration environment name ('development', 'production', 'testing')
 
     Returns:
         Flask application instance
@@ -22,12 +25,18 @@ def create_app():
     # Create app
     app = Flask(__name__)
 
-    # Load configuration
-    from app.config import Config
-    app.config.from_object(Config)
+    # Load configuration based on environment
+    if config_name is None:
+        config_name = os.environ.get('FLASK_ENV', 'development')
+    
+    from app.config import config
+    app.config.from_object(config[config_name])
+    
+    # Initialize app with config-specific setup
+    config[config_name].init_app(app) if hasattr(config[config_name], 'init_app') else None
 
     # Ensure data directory exists
-    os.makedirs(Config.DATA_DIR, exist_ok=True)
+    os.makedirs(app.config['DATA_DIR'], exist_ok=True)
 
     # Configure logging
     configure_logging(app)

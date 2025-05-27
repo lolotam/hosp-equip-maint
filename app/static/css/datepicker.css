@@ -1,0 +1,167 @@
+/* Date Picker Custom Styles */
+
+/* Wrapper for date picker inputs */
+.datepicker-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+/* Date picker icon styling */
+.datepicker-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    cursor: pointer;
+    z-index: 10;
+    pointer-events: none;
+    transition: color 0.2s ease;
+}
+
+/* Date picker input styling */
+.datepicker {
+    padding-right: 35px !important;
+}
+
+/* Hover effect for date picker icon */
+.datepicker-wrapper:hover .datepicker-icon {
+    color: #495057;
+}
+
+/* Focus effect for date picker */
+.datepicker:focus + .datepicker-icon {
+    color: #0d6efd;
+}
+
+/* Custom Flatpickr calendar styling */
+.custom-datepicker.flatpickr-calendar {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: 1px solid #dee2e6;
+}
+
+.custom-datepicker .flatpickr-day {
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.custom-datepicker .flatpickr-day:hover {
+    background: #e9ecef;
+    border-color: #e9ecef;
+}
+
+.custom-datepicker .flatpickr-day.selected {
+    background: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.custom-datepicker .flatpickr-day.today {
+    border-color: #0d6efd;
+    color: #0d6efd;
+}
+
+.custom-datepicker .flatpickr-day.today:hover {
+    background: #0d6efd;
+    color: white;
+}
+
+/* Month navigation styling */
+.custom-datepicker .flatpickr-months {
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.custom-datepicker .flatpickr-month {
+    color: #495057;
+}
+
+.custom-datepicker .flatpickr-prev-month,
+.custom-datepicker .flatpickr-next-month {
+    color: #6c757d;
+    transition: color 0.2s ease;
+}
+
+.custom-datepicker .flatpickr-prev-month:hover,
+.custom-datepicker .flatpickr-next-month:hover {
+    color: #0d6efd;
+}
+
+/* Weekday headers */
+.custom-datepicker .flatpickr-weekday {
+    color: #6c757d;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+/* Input validation states */
+.datepicker.is-invalid {
+    border-color: #dc3545;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    padding-right: calc(1.5em + 0.75rem + 35px) !important;
+}
+
+.datepicker.is-invalid + .datepicker-icon {
+    right: calc(1.5em + 0.75rem + 10px);
+    color: #dc3545;
+}
+
+.datepicker.is-valid {
+    border-color: #198754;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='m2.3 6.73.94-.94 1.38 1.38'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    padding-right: calc(1.5em + 0.75rem + 35px) !important;
+}
+
+.datepicker.is-valid + .datepicker-icon {
+    right: calc(1.5em + 0.75rem + 10px);
+    color: #198754;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .custom-datepicker.flatpickr-calendar {
+        font-size: 0.875rem;
+    }
+    
+    .datepicker-icon {
+        right: 8px;
+    }
+    
+    .datepicker {
+        padding-right: 30px !important;
+    }
+}
+
+/* Dark mode support (if implemented) */
+@media (prefers-color-scheme: dark) {
+    .custom-datepicker.flatpickr-calendar {
+        background: #212529;
+        border-color: #495057;
+        color: #fff;
+    }
+    
+    .custom-datepicker .flatpickr-months {
+        background: #343a40;
+        border-bottom-color: #495057;
+    }
+    
+    .custom-datepicker .flatpickr-day {
+        color: #fff;
+    }
+    
+    .custom-datepicker .flatpickr-day:hover {
+        background: #495057;
+        border-color: #495057;
+    }
+    
+    .custom-datepicker .flatpickr-weekday {
+        color: #adb5bd;
+    }
+} 

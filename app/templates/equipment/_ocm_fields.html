@@ -1,7 +1,7 @@
 <div class="row mb-3">
     <div class="col-md-6">
         <label for="Last_Date" class="form-label">Last Date (Next Date will be auto-calculated)</label>
-        <input type="text" class="form-control {% if errors.Last_Date %}is-invalid{% endif %}" id="Last_Date" name="Last_Date" value="{{ form_data.Last_Date or '' }}" pattern="\d{2}/\d{2}/\d{4}" placeholder="DD/MM/YYYY" required>
+        <input type="text" class="form-control datepicker {% if errors.Last_Date %}is-invalid{% endif %}" id="Last_Date" name="Last_Date" value="{{ form_data.Last_Date or '' }}" placeholder="DD/MM/YYYY" required>
         {% if errors.Last_Date %}
         <div class="invalid-feedback">
             {% for error in errors.Last_Date %}
@@ -9,6 +9,7 @@
             {% endfor %}
         </div>
         {% endif %}
+        <small class="text-muted">Click the calendar icon or type DD/MM/YYYY format</small>
     </div>
     <div class="col-md-6">
         <label for="ENGINEER" class="form-label">Engineer</label>
@@ -31,3 +32,6 @@
     </div>
 </div>
 {% endif %}
+
+
+

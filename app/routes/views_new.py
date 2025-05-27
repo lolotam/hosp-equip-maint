@@ -10,15 +10,15 @@ import csv
 import os
 import platform
 import ctypes
-from datetime import datetime
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, g
+from datetime import datetime, timedelta
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, send_file, Response
 from flask import send_file
 import tempfile
 import pandas as pd
 from werkzeug.utils import secure_filename
 from app.services.data_service import DataService
 from app.services.validation import ValidationService
-from functools import wraps
+from app.services.import_export import ImportExportService
 
 views_bp = Blueprint('views', __name__)
 logger = logging.getLogger(__name__)
@@ -29,37 +29,9 @@ ALLOWED_EXTENSIONS = {'csv'}
 # Export this function for use in other modules
 __all__ = ['views_bp', 'get_combined_machine_list']
 
-# Hardcoded users and roles
-USERS = {
-    'admin': {'password': 'admin123', 'role': 'ADMIN'},
-    'nurse': {'password': 'Nurse123', 'role': 'DATAENTRY'},
-    'gust': {'password': 'gust123', 'role': 'VIEWER'},
-}
-
-def login_required(view_func):
-    @wraps(view_func)
-    def wrapped_view(*args, **kwargs):
-        if 'user' not in session:
-            return redirect(url_for('views.login'))
-        g.user = session['user']
-        g.role = session['role']
-        return view_func(*args, **kwargs)
-    return wrapped_view
-
-def role_required(*roles):
-    def decorator(view_func):
-        @wraps(view_func)
-        def wrapped_view(*args, **kwargs):
-            if 'role' not in session or session['role'] not in roles:
-                flash('You do not have permission to access this page.', 'danger')
-                return redirect(url_for('views.index'))
-            return view_func(*args, **kwargs)
-        return wrapped_view
-    return decorator
-
 def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    """Check if file has allowed extension."""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def get_combined_machine_list():
     """Combine PPM and OCM data into a unified list for the dashboard."""
@@ -132,32 +104,102 @@ def get_combined_machine_list():
 
     # Add status information
     for item in combined_data:
-        next_maintenance = item.get('next_maintenance')
-        if next_maintenance and next_maintenance != 'Not Scheduled':
-            try:
-                maintenance_date = datetime.strptime(next_maintenance, '%d/%m/%Y')
-                days_until = (maintenance_date - datetime.now()).days
-
-                if days_until < 0:
-                    item['status'] = 'Overdue'
-                    item['status_class'] = 'danger'
-                elif days_until <= 7:
-                    item['status'] = 'Due Soon'
-                    item['status_class'] = 'warning'
-                else:
-                    item['status'] = 'OK'
-                    item['status_class'] = 'success'
-            except ValueError:
-                item['status'] = 'Invalid Date'
-                item['status_class'] = 'secondary'
-        else:
-            item['status'] = 'No Schedule'
-            item['status_class'] = 'secondary'
+        # Calculate automatic status
+        status_info = calculate_equipment_status(item, item['type'].lower())
+        
+        # Use override status if available, otherwise use calculated status
+        item['status'] = item.get('status_override') or status_info['status']
+        item['status_class'] = status_info['class']
 
     return combined_data
 
+def calculate_equipment_status(entry, data_type):
+    """Calculate status for a single equipment entry."""
+    # Check if there's a manual status override
+    status_override = entry.get('status_override')
+    if status_override:
+        status_map = {
+            'OK': {'status': 'OK', 'class': 'success'},
+            'Due Soon': {'status': 'Due Soon', 'class': 'warning'},
+            'Overdue': {'status': 'Overdue', 'class': 'danger'},
+            'Invalid Date': {'status': 'Invalid Date', 'class': 'secondary'}
+        }
+        return status_map.get(status_override, {'status': 'OK', 'class': 'success'})
+
+    # Calculate automatic status based on maintenance dates
+    next_maintenance = None
+    
+    if data_type == 'ppm':
+        # For PPM, find the next upcoming quarter date
+        q1_date_str = entry.get('PPM_Q_I', {}).get('date')
+        if q1_date_str:
+            try:
+                q1_date = datetime.strptime(q1_date_str, '%d/%m/%Y')
+                # Calculate dates for Q2, Q3, Q4 based on Q1 date
+                q2_date = q1_date + relativedelta(months=3)
+                q3_date = q1_date + relativedelta(months=6)
+                q4_date = q1_date + relativedelta(months=9)
+                quarter_dates = [q1_date, q2_date, q3_date, q4_date]
+
+                # Find the earliest upcoming quarter date or the most recent past date
+                now = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+                upcoming_dates = [date for date in quarter_dates if date >= now]
+                
+                if upcoming_dates:
+                    next_maintenance = min(upcoming_dates)
+                else:
+                    # If no upcoming dates, find the most recent past date to determine overdue status
+                    past_dates = [date for date in quarter_dates if date < now]
+                    if past_dates:
+                        next_maintenance = max(past_dates)  # Most recent past date
+            except ValueError:
+                return {'status': 'Invalid Date', 'class': 'secondary'}
+    else:  # OCM
+        # For OCM, use Next_Date
+        next_date = entry.get('Next_Date')
+        if next_date and next_date != 'n/a':
+            try:
+                next_maintenance = datetime.strptime(next_date, '%d/%m/%Y')
+            except ValueError:
+                return {'status': 'Invalid Date', 'class': 'secondary'}
+
+    # Calculate status based on next maintenance date
+    if next_maintenance:
+        days_until = (next_maintenance - datetime.now()).days
+        
+        # For PPM, also check if any quarter is overdue
+        if data_type == 'ppm':
+            q1_date_str = entry.get('PPM_Q_I', {}).get('date')
+            if q1_date_str:
+                try:
+                    q1_date = datetime.strptime(q1_date_str, '%d/%m/%Y')
+                    q2_date = q1_date + relativedelta(months=3)
+                    q3_date = q1_date + relativedelta(months=6)
+                    q4_date = q1_date + relativedelta(months=9)
+                    quarter_dates = [q1_date, q2_date, q3_date, q4_date]
+                    
+                    now = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+                    # Check if any quarter is overdue
+                    overdue_dates = [date for date in quarter_dates if date < now]
+                    if overdue_dates:
+                        # Find the most recent overdue date
+                        most_recent_overdue = max(overdue_dates)
+                        days_overdue = (now - most_recent_overdue).days
+                        if days_overdue > 0:  # Any overdue maintenance makes it overdue
+                            return {'status': 'Overdue', 'class': 'danger'}
+                except ValueError:
+                    pass
+        
+        if days_until < 0:
+            return {'status': 'Overdue', 'class': 'danger'}
+        elif days_until <= 7:
+            return {'status': 'Due Soon', 'class': 'warning'}
+        else:
+            return {'status': 'OK', 'class': 'success'}
+    else:
+        return {'status': 'No Schedule', 'class': 'secondary'}
+
 @views_bp.route('/')
-@login_required
 def index():
     """Display the dashboard with maintenance statistics."""
     from datetime import datetime
@@ -203,7 +245,6 @@ def index():
                          equipment=combined_data)
 
 @views_bp.route('/equipment/<data_type>/list')
-@login_required
 def list_equipment(data_type):
     """Display list of equipment (either PPM or OCM)."""
     if data_type not in ('ppm', 'ocm'):
@@ -211,6 +252,17 @@ def list_equipment(data_type):
         return redirect(url_for('views.index'))
     try:
         data = DataService.get_all_entries(data_type) # Don't exclude PPM entries
+        
+        # Add status information to each entry
+        for entry in data:
+            status_info = calculate_equipment_status(entry, data_type)
+            entry['calculated_status'] = status_info['status']
+            entry['calculated_status_class'] = status_info['class']
+            
+            # Use override status if available, otherwise use calculated status
+            entry['display_status'] = entry.get('status_override') or status_info['status']
+            entry['display_status_class'] = status_info['class']
+        
         # Render the list template which now includes add/import buttons
         return render_template('equipment/list.html', equipment=data, data_type=data_type)
     except Exception as e:
@@ -219,7 +271,6 @@ def list_equipment(data_type):
         return render_template('equipment/list.html', equipment=[], data_type=data_type)
 
 @views_bp.route('/equipment/ppm/edit/<mfg_serial>', methods=['GET', 'POST'])
-@login_required
 def edit_ppm_equipment(mfg_serial):
     """Handle editing existing PPM equipment."""
     # Get department options
@@ -297,7 +348,6 @@ def edit_ppm_equipment(mfg_serial):
                           form_data=form_data, departments=departments, mfg_serial=mfg_serial)
 
 @views_bp.route('/equipment/ocm/edit/<mfg_serial>', methods=['GET', 'POST'])
-@login_required
 def edit_ocm_equipment(mfg_serial):
     """Handle editing existing OCM equipment."""
     # Get department options
@@ -349,6 +399,15 @@ def edit_ocm_equipment(mfg_serial):
                     'Last_Date': last_date,
                     'ENGINEER': form_data.get('ENGINEER', '').strip() or 'n/a',
                 }
+                
+                # Handle installation_date and end_of_warranty fields
+                installation_date = form_data.get('installation_date', '').strip()
+                end_of_warranty = form_data.get('end_of_warranty', '').strip()
+                
+                if installation_date and installation_date.lower() != 'n/a':
+                    model_data['installation_date'] = installation_date
+                if end_of_warranty and end_of_warranty.lower() != 'n/a':
+                    model_data['end_of_warranty'] = end_of_warranty
 
                 # Calculate Next_Date (1 year after Last_Date)
                 try:
@@ -399,14 +458,15 @@ def edit_ocm_equipment(mfg_serial):
         'OCM': existing_entry.get('OCM', 'Yes'),
         'Last_Date': existing_entry.get('Last_Date', ''),
         'ENGINEER': existing_entry.get('ENGINEER', ''),
-        'Next_Date': existing_entry.get('Next_Date', '')
+        'Next_Date': existing_entry.get('Next_Date', ''),
+        'installation_date': existing_entry.get('installation_date', ''),
+        'end_of_warranty': existing_entry.get('end_of_warranty', '')
     }
 
     return render_template('equipment/edit.html', data_type='ocm', errors={},
                           form_data=form_data, departments=departments, mfg_serial=mfg_serial)
 
 @views_bp.route('/equipment/ppm/add', methods=['GET', 'POST'])
-@login_required
 def add_ppm_equipment():
     """Handle adding new PPM equipment."""
     # Get department options
@@ -436,7 +496,6 @@ def add_ppm_equipment():
     return render_template('equipment/add.html', data_type='ppm', errors={}, form_data={}, departments=departments)
 
 @views_bp.route('/equipment/ocm/add', methods=['GET', 'POST'])
-@login_required
 def add_ocm_equipment():
     """Handle adding new OCM equipment."""
     # Get department options
@@ -475,6 +534,15 @@ def add_ocm_equipment():
                     'Last_Date': last_date,
                     'ENGINEER': form_data.get('ENGINEER', '').strip() or 'n/a',
                 }
+                
+                # Handle installation_date and end_of_warranty fields
+                installation_date = form_data.get('installation_date', '').strip()
+                end_of_warranty = form_data.get('end_of_warranty', '').strip()
+                
+                if installation_date and installation_date.lower() != 'n/a':
+                    model_data['installation_date'] = installation_date
+                if end_of_warranty and end_of_warranty.lower() != 'n/a':
+                    model_data['end_of_warranty'] = end_of_warranty
 
                 # Calculate Next_Date (1 year after Last_Date)
                 try:
@@ -501,7 +569,6 @@ def add_ocm_equipment():
     return render_template('equipment/add.html', data_type='ocm', errors={}, form_data={}, departments=departments)
 
 @views_bp.route('/training/import', methods=['POST'])
-@login_required
 def import_training():
     """Import training data from a CSV file."""
     if 'file' not in request.files:
@@ -703,7 +770,6 @@ def import_training():
         return redirect(url_for('views.import_export_page', section='training'))
 
 @views_bp.route('/training/list')
-@login_required
 def list_training():
     """Display the list of employee training records."""
     try:
@@ -716,21 +782,20 @@ def list_training():
         return render_template('training/list.html', employees=[], departments=[])
 
 @views_bp.route('/import-export')
-@login_required
 def import_export_page():
     """Display the unified import/export page with tabs for machines and training."""
     section = request.args.get('section', 'maintenance')
     return render_template('import_export/unified.html', section=section)
 
 @views_bp.route('/template/ppm')
-@login_required
 def download_ppm_template():
     """Generate and download a PPM template CSV file."""
     try:
         # Create a template with headers but no data
         headers = [
             'EQUIPMENT', 'MODEL', 'MFG_SERIAL', 'MANUFACTURER', 'LOG_NO', 'DEPARTMENT', 'PPM',
-            'PPM Q I', 'Q1_ENGINEER', 'Q2_ENGINEER', 'Q3_ENGINEER', 'Q4_ENGINEER'
+            'PPM Q I', 'Q1_ENGINEER', 'Q2_ENGINEER', 'Q3_ENGINEER', 'Q4_ENGINEER',
+            'INSTALLATION_DATE', 'WARRANTY_END'
         ]
 
         # Create a CSV string with just the headers
@@ -741,13 +806,15 @@ def download_ppm_template():
         # Add one example row to help users understand the format
         example_row = [
             'Ventilator', 'XYZ-100', 'SN12345', 'Medical Systems Inc', 'LOG001', 'LDR', 'Yes',
-            '01/01/2024', 'John Doe', 'Jane Smith', 'John Doe', 'Jane Smith'
+            '01/01/2024', 'John Doe', 'Jane Smith', 'John Doe', 'Jane Smith',
+            '15/06/2023', '15/06/2025'
         ]
 
         # Add a second example row with a different department
         example_row2 = [
             'MRI Scanner', 'MRI-500', 'SN67890', 'Imaging Corp', 'LOG002', 'LABORATORY', 'Yes',
-            '15/02/2024', 'Jane Smith', 'John Doe', 'Jane Smith', 'John Doe'
+            '15/02/2024', 'Jane Smith', 'John Doe', 'Jane Smith', 'John Doe',
+            '10/03/2023', '10/03/2026'
         ]
         writer.writerow(example_row)
         writer.writerow(example_row2)
@@ -772,14 +839,13 @@ def download_ppm_template():
         return redirect(url_for('views.list_equipment', data_type='ppm'))
 
 @views_bp.route('/template/ocm')
-@login_required
 def download_ocm_template():
     """Generate and download an OCM template CSV file."""
     try:
         # Create a template with headers but no data
         headers = [
             'EQUIPMENT', 'MODEL', 'MFG_SERIAL', 'MANUFACTURER', 'LOG_NO', 'DEPARTMENT', 'OCM',
-            'Last_Date', 'ENGINEER'
+            'Last_Date', 'ENGINEER', 'INSTALLATION_DATE', 'WARRANTY_END'
         ]
 
         # Create a CSV string with just the headers
@@ -790,13 +856,13 @@ def download_ocm_template():
         # Add one example row to help users understand the format
         example_row = [
             'MRI Scanner', 'MRI-500', 'SN67890', 'Imaging Corp', 'LOG002', 'X-RAY', 'Yes',
-            '15/06/2024', 'Jane Smith'
+            '15/06/2024', 'Jane Smith', '20/05/2023', '20/05/2026'
         ]
 
         # Add a second example row with a different department
         example_row2 = [
             'Ultrasound', 'US-200', 'SN54321', 'Medical Devices Ltd', 'LOG003', 'OPTHA', 'Yes',
-            '20/07/2024', 'John Doe'
+            '20/07/2024', 'John Doe', '15/08/2023', '15/08/2025'
         ]
         writer.writerow(example_row)
         writer.writerow(example_row2)
@@ -821,7 +887,6 @@ def download_ocm_template():
         return redirect(url_for('views.list_equipment', data_type='ocm'))
 
 @views_bp.route('/training/edit/<employee_id>', methods=['GET', 'POST'])
-@login_required
 def edit_training(employee_id):
     """Handle editing an existing employee training record."""
     # Get department options
@@ -929,8 +994,12 @@ def edit_training(employee_id):
     # GET request: show form with existing data
     return render_template('training/edit.html', errors={}, form_data=existing_entry, departments=departments, employee_id=employee_id)
 
+@views_bp.route('/test-datepicker')
+def test_datepicker():
+    """Test page for date picker functionality."""
+    return render_template('test_datepicker.html')
+
 @views_bp.route('/equipment/<data_type>/delete/<mfg_serial>', methods=['POST'])
-@login_required
 def delete_equipment(data_type, mfg_serial):
     """Delete equipment (either PPM or OCM)."""
     if data_type not in ('ppm', 'ocm'):
@@ -949,7 +1018,6 @@ def delete_equipment(data_type, mfg_serial):
     return redirect(url_for('views.list_equipment', data_type=data_type))
 
 @views_bp.route('/training/delete/<employee_id>', methods=['POST'])
-@login_required
 def delete_training(employee_id):
     """Delete an employee training record."""
     try:
@@ -964,7 +1032,6 @@ def delete_training(employee_id):
     return redirect(url_for('views.list_training'))
 
 @views_bp.route('/training/add', methods=['GET', 'POST'])
-@login_required
 def add_training():
     """Handle adding new employee training record."""
     # Get department options
@@ -1067,7 +1134,6 @@ def add_training():
     return render_template('training/add.html', errors={}, form_data={}, departments=departments)
 
 @views_bp.route('/template/training')
-@login_required
 def download_training_template():
     """Generate and download a training template CSV file with the new format."""
     try:
@@ -1144,7 +1210,6 @@ def download_training_template():
         return redirect(url_for('views.list_training'))
 
 @views_bp.route('/export/<data_type>')
-@login_required
 def export_equipment(data_type):
     """
     Export equipment data to CSV for download.
@@ -1179,7 +1244,6 @@ def export_equipment(data_type):
         return redirect(url_for('views.import_export_page', section='machines'))
 
 @views_bp.route('/import/equipment', methods=['POST'])
-@login_required
 def import_equipment():
     """Import equipment data from CSV file."""
     try:
@@ -1269,13 +1333,11 @@ def import_equipment():
         return redirect(url_for('views.import_export_page', section='machines'))
 
 @views_bp.route('/settings')
-@login_required
 def settings():
     """Display the settings page."""
     return render_template('settings/index.html')
 
 @views_bp.route('/send-test-notification')
-@login_required
 def send_test_notification():
     """Send a test notification email."""
     import asyncio
@@ -1328,7 +1390,6 @@ def send_test_notification():
             return redirect(url_for('views.index'))
 
 @views_bp.route('/export/training')
-@login_required
 def export_training():
     """Export training data to CSV for download."""
     try:
@@ -1352,24 +1413,3 @@ def export_training():
         logger.exception(f"Error exporting training data: {str(e)}")
         flash(f"An error occurred during export: {str(e)}", 'danger')
         return redirect(url_for('views.import_export_page', section='training'))
-
-@views_bp.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form.get('username', '').strip().lower()
-        password = request.form.get('password', '')
-        user = USERS.get(username)
-        if user and user['password'] == password:
-            session['user'] = username
-            session['role'] = user['role']
-            flash(f'Welcome, {username}!', 'success')
-            return redirect(url_for('views.index'))
-        else:
-            flash('Invalid username or password.', 'danger')
-    return render_template('login.html')
-
-@views_bp.route('/logout')
-def logout():
-    session.clear()
-    flash('You have been logged out.', 'info')
-    return redirect(url_for('views.login'))

@@ -32,7 +32,7 @@
                 <div class="col-md-3">
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-filter"></i></span>
-                        <select id="filterSelect" class="form-select">
+                        <select id="filterSelect" class="form-select" aria-label="Filter by status">
                             <option value="">Filter by Status</option>
                             <option value="Yes">Yes</option>
                             <option value="No">PPM: No</option>
@@ -42,7 +42,7 @@
                 <div class="col-md-3">
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-sort"></i></span>
-                        <select id="sortSelect" class="form-select">
+                        <select id="sortSelect" class="form-select" aria-label="Sort by field">
                             <option value="">Sort by...</option>
                             <option value="EQUIPMENT">Equipment</option>
                             <option value="MODEL">Model</option>
@@ -71,7 +71,7 @@
             <table class="table table-striped table-hover enhanced-table" id="equipment-table">
                 <thead>
                     <tr>
-                        <th class="no-sort no-filter"><input type="checkbox" id="selectAll" class="form-check-input"></th>
+                        <th class="no-sort no-filter"><input type="checkbox" id="selectAll" class="form-check-input" aria-label="Select all items"></th>
                         <th>Equipment</th>
                         <th>Model</th>
                         <th>MFG Serial</th>
@@ -92,13 +92,16 @@
                             <th>Engineer</th>
                             <th>Next Date</th>
                         {% endif %}
+                        <th>Installation Date</th>
+                        <th>End of Warranty</th>
+                        <th class="dropdown-filter">Status</th>
                         <th class="no-sort no-filter">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for entry in equipment %}
                         <tr>
-                            <td><input type="checkbox" class="item-checkbox form-check-input" data-serial="{{ entry.get('MFG_SERIAL') }}"></td>
+                            <td><input type="checkbox" class="item-checkbox form-check-input" data-serial="{{ entry.get('MFG_SERIAL') }}" aria-label="Select {{ entry.get('EQUIPMENT', 'item') }}"></td>
                             <td>{{ entry.get('EQUIPMENT', '') if entry.get('EQUIPMENT') != 'n/a' else '' }}</td>
                             <td>{{ entry.get('MODEL', '') if entry.get('MODEL') != 'n/a' else '' }}</td>
                             <td>{{ entry.get('MFG_SERIAL', '') }}</td>
@@ -119,6 +122,29 @@
                                 <td>{{ entry.get('ENGINEER', '') if entry.get('ENGINEER') != 'n/a' else '' }}</td>
                                 <td>{{ entry.get('Next_Date', '') }}</td>
                             {% endif %}
+                            <td>{{ entry.get('installation_date', '') if entry.get('installation_date') else '' }}</td>
+                            <td>{{ entry.get('end_of_warranty', '') if entry.get('end_of_warranty') else '' }}</td>
+                            <td>
+                                <div class="status-container">
+                                    <span class="badge bg-{{ entry.get('display_status_class', 'secondary') }} status-badge">
+                                        {{ entry.get('display_status', 'No Schedule') }}
+                                    </span>
+                                    <select class="form-select form-select-sm status-dropdown d-none" 
+                                            data-serial="{{ entry.get('MFG_SERIAL') }}" 
+                                            data-type="{{ data_type }}"
+                                            aria-label="Status override for {{ entry.get('EQUIPMENT', 'equipment') }}">
+                                        <option value="">Auto ({{ entry.get('calculated_status', 'No Schedule') }})</option>
+                                        <option value="OK" {% if entry.get('status_override') == 'OK' %}selected{% endif %}>OK</option>
+                                        <option value="Due Soon" {% if entry.get('status_override') == 'Due Soon' %}selected{% endif %}>Due Soon</option>
+                                        <option value="Overdue" {% if entry.get('status_override') == 'Overdue' %}selected{% endif %}>Overdue</option>
+                                    </select>
+                                    <button class="btn btn-sm btn-outline-secondary edit-status-btn" 
+                                            data-serial="{{ entry.get('MFG_SERIAL') }}"
+                                            title="Edit status">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                            </td>
                             <td>
                                 <div class="d-flex justify-content-center">
                                     {# Edit Button #}
@@ -176,6 +202,154 @@
                 updateBulkActionsVisibility();
             });
         }
+
+        // Status editing functionality
+        const editStatusBtns = document.querySelectorAll('.edit-status-btn');
+        const statusDropdowns = document.querySelectorAll('.status-dropdown');
+        const statusBadges = document.querySelectorAll('.status-badge');
+
+        editStatusBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const serial = this.dataset.serial;
+                const statusContainer = this.closest('.status-container');
+                const badge = statusContainer.querySelector('.status-badge');
+                const dropdown = statusContainer.querySelector('.status-dropdown');
+
+                // Toggle between badge and dropdown
+                if (dropdown.classList.contains('d-none')) {
+                    badge.classList.add('d-none');
+                    dropdown.classList.remove('d-none');
+                    dropdown.focus();
+                } else {
+                    badge.classList.remove('d-none');
+                    dropdown.classList.add('d-none');
+                }
+            });
+        });
+
+        statusDropdowns.forEach(dropdown => {
+            dropdown.addEventListener('change', function() {
+                const serial = this.dataset.serial;
+                const dataType = this.dataset.type;
+                const newStatus = this.value;
+                
+                // Update status via API
+                fetch(`/api/equipment/${dataType}/${serial}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update the badge
+                        const statusContainer = this.closest('.status-container');
+                        const badge = statusContainer.querySelector('.status-badge');
+                        
+                        // Determine display status and class
+                        let displayStatus, statusClass;
+                        if (newStatus) {
+                            displayStatus = newStatus;
+                            switch(newStatus) {
+                                case 'OK': statusClass = 'success'; break;
+                                case 'Due Soon': statusClass = 'warning'; break;
+                                case 'Overdue': statusClass = 'danger'; break;
+                                default: statusClass = 'secondary';
+                            }
+                        } else {
+                            // Use auto-calculated status
+                            const autoOption = this.querySelector('option[value=""]');
+                            displayStatus = autoOption.textContent.replace('Auto (', '').replace(')', '');
+                            // You might need to determine the class based on the auto status
+                            switch(displayStatus) {
+                                case 'OK': statusClass = 'success'; break;
+                                case 'Due Soon': statusClass = 'warning'; break;
+                                case 'Overdue': statusClass = 'danger'; break;
+                                default: statusClass = 'secondary';
+                            }
+                        }
+                        
+                        badge.textContent = displayStatus;
+                        badge.className = `badge bg-${statusClass} status-badge`;
+                        
+                        // Hide dropdown and show badge
+                        badge.classList.remove('d-none');
+                        this.classList.add('d-none');
+                        
+                        // Show success message
+                        const toast = document.createElement('div');
+                        toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed top-0 end-0 m-3';
+                        toast.style.zIndex = '9999';
+                        toast.innerHTML = `
+                            <div class="d-flex">
+                                <div class="toast-body">Status updated successfully!</div>
+                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                            </div>
+                        `;
+                        document.body.appendChild(toast);
+                        const bsToast = new bootstrap.Toast(toast);
+                        bsToast.show();
+                        setTimeout(() => toast.remove(), 5000);
+                    } else {
+                        alert('Error updating status: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error updating status. Please try again.');
+                });
+            });
+
+            // Hide dropdown when clicking outside or pressing Escape
+            dropdown.addEventListener('blur', function() {
+                setTimeout(() => {
+                    const statusContainer = this.closest('.status-container');
+                    const badge = statusContainer.querySelector('.status-badge');
+                    badge.classList.remove('d-none');
+                    this.classList.add('d-none');
+                }, 150);
+            });
+
+            dropdown.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    const statusContainer = this.closest('.status-container');
+                    const badge = statusContainer.querySelector('.status-badge');
+                    badge.classList.remove('d-none');
+                    this.classList.add('d-none');
+                }
+            });
+        });
     });
 </script>
+
+<style>
+.status-container {
+    position: relative;
+    display: inline-block;
+}
+
+.status-dropdown {
+    min-width: 150px;
+}
+
+.edit-status-btn {
+    margin-left: 5px;
+    padding: 2px 6px;
+}
+
+.status-badge {
+    cursor: pointer;
+}
+
+.status-container:hover .edit-status-btn {
+    opacity: 1;
+}
+
+.edit-status-btn {
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+</style>
 {% endblock %}
